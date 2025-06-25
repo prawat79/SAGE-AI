@@ -1,26 +1,106 @@
 /*
-  # Create FlowGPT Clone Database Schema
+  # Sage AI Database Schema
 
   1. New Tables
-    - `user_profiles` - User profile information with username, bio, avatar, etc.
-    - `characters` - AI characters with personality, description, and metadata
-    - `conversations` - Chat conversations between users and characters
-    - `messages` - Individual messages within conversations
-    - `character_likes` - User likes for characters
-    - `character_ratings` - User ratings and reviews for characters
-    - `character_categories` - Predefined categories for organizing characters
+    - `user_profiles`
+      - `id` (uuid, primary key, references auth.users)
+      - `username` (varchar, unique)
+      - `full_name` (varchar)
+      - `bio` (text)
+      - `avatar_url` (text)
+      - `website` (text)
+      - `location` (varchar)
+      - `is_public` (boolean)
+      - `preferences` (jsonb)
+      - `created_at` (timestamp)
+      - `updated_at` (timestamp)
+
+    - `characters`
+      - `id` (uuid, primary key)
+      - `name` (varchar)
+      - `description` (text)
+      - `personality` (text)
+      - `scenario` (text)
+      - `greeting_message` (text)
+      - `category` (varchar)
+      - `tags` (text array)
+      - `avatar_url` (text)
+      - `is_public` (boolean)
+      - `ai_provider` (varchar)
+      - `ai_model` (varchar)
+      - `created_by` (uuid, references auth.users)
+      - `view_count` (integer)
+      - `chat_count` (integer)
+      - `like_count` (integer)
+      - `rating` (decimal)
+      - `rating_count` (integer)
+      - `created_at` (timestamp)
+      - `updated_at` (timestamp)
+
+    - `conversations`
+      - `id` (uuid, primary key)
+      - `user_id` (uuid, references auth.users)
+      - `character_id` (uuid, references characters)
+      - `title` (varchar)
+      - `created_at` (timestamp)
+      - `updated_at` (timestamp)
+
+    - `messages`
+      - `id` (uuid, primary key)
+      - `conversation_id` (uuid, references conversations)
+      - `role` (varchar, check constraint)
+      - `content` (text)
+      - `metadata` (jsonb)
+      - `created_at` (timestamp)
+
+    - `character_likes`
+      - `id` (uuid, primary key)
+      - `user_id` (uuid, references auth.users)
+      - `character_id` (uuid, references characters)
+      - `created_at` (timestamp)
+      - Unique constraint on (user_id, character_id)
+
+    - `character_ratings`
+      - `id` (uuid, primary key)
+      - `user_id` (uuid, references auth.users)
+      - `character_id` (uuid, references characters)
+      - `rating` (integer, check constraint 1-5)
+      - `review` (text)
+      - `created_at` (timestamp)
+      - `updated_at` (timestamp)
+      - Unique constraint on (user_id, character_id)
+
+    - `character_categories`
+      - `id` (uuid, primary key)
+      - `name` (varchar, unique)
+      - `description` (text)
+      - `icon` (varchar)
+      - `color` (varchar)
+      - `is_active` (boolean)
+      - `sort_order` (integer)
+      - `created_at` (timestamp)
 
   2. Security
     - Enable RLS on all tables
-    - Add policies for proper access control
-    - Users can only access their own data
-    - Public characters are viewable by everyone
+    - Add policies for authenticated users to manage their own data
+    - Add policies for public access to characters and categories
+    - Add policies for conversation and message access control
 
-  3. Features
-    - Full-text search capabilities
-    - Automatic statistics updates
-    - User profile creation on signup
-    - Character search and filtering functions
+  3. Functions and Triggers
+    - `update_updated_at_column()` function for automatic timestamp updates
+    - `update_character_stats()` function for maintaining character statistics
+    - `handle_new_user()` function for creating user profiles on signup
+    - `get_character_stats()` function for character analytics
+    - `search_characters()` function for full-text search
+    - Triggers for automatic updates and user profile creation
+
+  4. Indexes
+    - Performance indexes on frequently queried columns
+    - Full-text search indexes for characters and user profiles
+    - Foreign key indexes for join performance
+
+  5. Default Data
+    - Character categories with Sage AI appropriate categories
 */
 
 -- Enable UUID extension
@@ -359,18 +439,18 @@ CREATE POLICY "Users can delete own ratings" ON character_ratings
 CREATE POLICY "Anyone can view character categories" ON character_categories
     FOR SELECT USING (is_active = true);
 
--- Insert default character categories
+-- Insert default character categories for Sage AI
 INSERT INTO character_categories (name, description, icon, color, sort_order) VALUES
-('Assistant', 'Helpful AI assistants for various tasks', '🤖', '#3B82F6', 1),
-('Companion', 'Friendly companions for conversation', '👥', '#10B981', 2),
-('Creative', 'Creative writing and storytelling characters', '✨', '#8B5CF6', 3),
-('Educational', 'Learning and educational assistants', '📚', '#F59E0B', 4),
-('Entertainment', 'Fun and entertaining characters', '🎭', '#EF4444', 5),
-('Professional', 'Business and professional assistants', '💼', '#6B7280', 6),
-('Gaming', 'Gaming and roleplay characters', '🎮', '#EC4899', 7),
-('Wellness', 'Health and wellness coaches', '🌱', '#14B8A6', 8),
-('Fantasy', 'Fantasy and fictional characters', '🧙‍♂️', '#7C3AED', 9),
-('Anime', 'Anime and manga characters', '🌸', '#F97316', 10)
+('AI Assistant', 'Intelligent AI assistants for productivity and support', '🤖', '#3B82F6', 1),
+('Sage Companion', 'Wise companions for meaningful conversations', '🧙‍♂️', '#10B981', 2),
+('Creative Muse', 'Creative partners for writing and artistic endeavors', '✨', '#8B5CF6', 3),
+('Knowledge Guide', 'Educational mentors and learning assistants', '📚', '#F59E0B', 4),
+('Entertainment', 'Fun and engaging characters for leisure', '🎭', '#EF4444', 5),
+('Professional', 'Business and career-focused assistants', '💼', '#6B7280', 6),
+('Gaming Buddy', 'Gaming companions and roleplay characters', '🎮', '#EC4899', 7),
+('Wellness Coach', 'Health, fitness, and mindfulness guides', '🌱', '#14B8A6', 8),
+('Fantasy Realm', 'Magical and fantastical characters', '🏰', '#7C3AED', 9),
+('Anime World', 'Anime and manga inspired characters', '🌸', '#F97316', 10)
 ON CONFLICT (name) DO NOTHING;
 
 -- Function to handle user profile creation on signup
