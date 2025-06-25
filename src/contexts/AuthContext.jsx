@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext();
 
@@ -8,29 +9,62 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Demo mode - no real authentication
-    console.log('Running in demo mode - no authentication required');
-    setLoading(false);
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        setIsAuthenticated(!!session?.user);
+      } catch (error) {
+        console.error('Error getting session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null);
+        setIsAuthenticated(!!session?.user);
+        setLoading(false);
+      }
+    );
+
+    return () => subscription?.unsubscribe();
   }, []);
 
   const signIn = async (email, password) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       if (error) throw error;
+      return data;
     } catch (error) {
       console.error('Error signing in:', error);
       throw error;
     }
   };
 
-  const signUp = async (email, password) => {
+  const signUp = async (email, password, metadata = {}) => {
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata
+        }
+      });
       if (error) throw error;
+      return data;
     } catch (error) {
       console.error('Error signing up:', error);
       throw error;
@@ -47,9 +81,56 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      throw error;
+    }
+  };
+
+  const signInWithGithub = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error signing in with GitHub:', error);
+      throw error;
+    }
+  };
+
+  const updateProfile = async (updates) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: updates
+      });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
+  };
+
   const resetPassword = async (email) => {
     try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
       if (error) throw error;
       return data;
     } catch (error) {
@@ -58,43 +139,18 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const updateProfile = async (updates) => {
-    try {
-      const { data, error } = await supabase.auth.updateUser({
-        data: updates,
-      });
-
-      if (error) throw error;
-      setUser(data.user);
-      return data;
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      throw error;
-    }
-  };
-
   const value = {
     user,
     loading,
-    error,
+    isAuthenticated,
     signIn,
     signUp,
     signOut,
-    resetPassword,
+    signInWithGoogle,
+    signInWithGithub,
     updateProfile,
+    resetPassword
   };
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Configuration Error</h2>
-          <p className="text-gray-600">{error}</p>
-          <p className="text-gray-600 mt-2">Please check your .env file and ensure Supabase credentials are set correctly.</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <AuthContext.Provider value={value}>

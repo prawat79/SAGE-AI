@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Send, MoreVertical, Trash2, RefreshCw, User, Bot, ArrowLeft } from 'lucide-react';
+import { Send, MoreVertical, Trash2, RefreshCw, User, Bot, ArrowLeft, Key } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { AIService } from '../services/aiService';
+import { CharacterService } from '../services/characterService';
+import ConversationService from '../services/conversationService';
+import AIService from '../services/aiService';
 
 const Message = ({ message, character }) => {
   const isUser = message.sender_type === 'user';
@@ -52,12 +54,14 @@ const ChatPage = () => {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [userApiKey, setUserApiKey] = useState(() => localStorage.getItem('userApiKey') || '');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-  const [userApiKey] = useState(() => localStorage.getItem('userApiKey') || '');
 
   useEffect(() => {
-    if (conversationId) {
+    if (conversationId && conversationId !== 'new') {
       loadConversation();
     } else {
       setLoading(false);
@@ -77,36 +81,19 @@ const ChatPage = () => {
       setLoading(true);
       
       // Load conversation details
-      const conversationResponse = await fetch(`/api/conversations/${conversationId}`, {
-        headers: {
-          'Authorization': `Bearer ${user?.access_token}`
-        }
-      });
-      
-      if (!conversationResponse.ok) {
-        throw new Error('Failed to load conversation');
-      }
-      
-      const conversationData = await conversationResponse.json();
-      setConversation(conversationData);
-      
-      // Load character details
-      const characterResponse = await fetch(`/api/characters/${conversationData.character_id}`);
-      if (characterResponse.ok) {
-        const characterData = await characterResponse.json();
+      const conversationData = await ConversationService.getConversation(conversationId);
+      if (conversationData) {
+        setConversation(conversationData);
+        
+        // Load character details
+        const characterData = await CharacterService.getCharacterById(conversationData.character_id);
         setCharacter(characterData);
-      }
-      
-      // Load messages
-      const messagesResponse = await fetch(`/api/conversations/${conversationId}/messages`, {
-        headers: {
-          'Authorization': `Bearer ${user?.access_token}`
-        }
-      });
-      
-      if (messagesResponse.ok) {
-        const messagesData = await messagesResponse.json();
-        setMessages(messagesData.data || []);
+        
+        // Load messages
+        const messagesData = await ConversationService.getMessages(conversationId);
+        setMessages(messagesData || []);
+      } else {
+        setError('Conversation not found');
       }
     } catch (err) {
       console.error('Error loading conversation:', err);
@@ -118,7 +105,12 @@ const ChatPage = () => {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending || !conversationId) return;
+    if (!newMessage.trim() || sending) return;
+
+    if (!userApiKey) {
+      setShowApiKeyModal(true);
+      return;
+    }
 
     const messageContent = newMessage.trim();
     setNewMessage('');
@@ -127,51 +119,48 @@ const ChatPage = () => {
     try {
       // Add user message to UI immediately
       const userMessage = {
-        id: Date.now(),
+        id: `temp_${Date.now()}`,
         content: messageContent,
         sender_type: 'user',
         created_at: new Date().toISOString()
       };
       setMessages(prev => [...prev, userMessage]);
 
-      // Send message to backend or AIService
-      // If you want to call AIService directly from frontend:
-      // const aiResponse = await AIService.generateResponse([...messages, userMessage], character, {}, userApiKey);
-      // setMessages(prev => [...prev, { id: Date.now() + 1, content: aiResponse, sender_type: 'ai', created_at: new Date().toISOString() }]);
+      // Save user message
+      const savedUserMessage = await ConversationService.saveMessage(
+        conversationId,
+        messageContent,
+        'user'
+      );
 
-      // If using backend, send the API key as a custom header
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.access_token}`,
-          'X-OpenAI-Key': userApiKey // Custom header for backend to use
-        },
-        body: JSON.stringify({
-          conversation_id: conversationId,
-          message: messageContent
-        })
+      // Generate AI response
+      const aiResponse = await AIService.generateResponse(
+        [{ content: messageContent, sender_type: 'user' }],
+        character,
+        {},
+        userApiKey
+      );
+
+      // Save AI message
+      const savedAiMessage = await ConversationService.saveMessage(
+        conversationId,
+        aiResponse,
+        'ai'
+      );
+
+      // Update messages with saved versions
+      setMessages(prev => {
+        const filtered = prev.filter(msg => msg.id !== userMessage.id);
+        return [...filtered, savedUserMessage, savedAiMessage];
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send message');
-      }
-
-      const result = await response.json();
-      
-      // Update messages with the actual saved message and AI response
-      if (result.userMessage && result.aiResponse) {
-        setMessages(prev => {
-          // Remove the temporary user message and add the real ones
-          const filtered = prev.filter(msg => msg.id !== userMessage.id);
-          return [...filtered, result.userMessage, result.aiResponse];
-        });
-      }
+      // Update conversation timestamp
+      await ConversationService.updateConversationTimestamp(conversationId);
     } catch (err) {
       console.error('Error sending message:', err);
       // Remove the temporary message on error
       setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
-      setError('Failed to send message');
+      setError('Failed to send message. Please check your API key.');
     } finally {
       setSending(false);
     }
@@ -184,21 +173,20 @@ const ChatPage = () => {
     }
   };
 
+  const handleSaveApiKey = () => {
+    localStorage.setItem('userApiKey', apiKeyInput);
+    setUserApiKey(apiKeyInput);
+    setShowApiKeyModal(false);
+    setApiKeyInput('');
+  };
+
   const clearConversation = async () => {
     if (!window.confirm('Are you sure you want to clear this conversation?')) return;
     
     try {
-      const response = await fetch(`/api/conversations/${conversationId}/clear`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${user?.access_token}`
-        }
-      });
-      
-      if (response.ok) {
-        setMessages([]);
-        setShowMenu(false);
-      }
+      await ConversationService.clearConversation(conversationId);
+      setMessages([]);
+      setShowMenu(false);
     } catch (err) {
       console.error('Error clearing conversation:', err);
     }
@@ -208,16 +196,8 @@ const ChatPage = () => {
     if (!window.confirm('Are you sure you want to delete this conversation?')) return;
     
     try {
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${user?.access_token}`
-        }
-      });
-      
-      if (response.ok) {
-        navigate('/chat');
-      }
+      await ConversationService.deleteConversation(conversationId);
+      navigate('/explore');
     } catch (err) {
       console.error('Error deleting conversation:', err);
     }
@@ -239,7 +219,7 @@ const ChatPage = () => {
     );
   }
 
-  if (!conversationId) {
+  if (!conversationId || conversationId === 'new') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -283,6 +263,46 @@ const ChatPage = () => {
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
+      {/* API Key Modal */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Key className="h-5 w-5" /> Enter Your OpenAI API Key
+            </h2>
+            <p className="text-gray-600 mb-4">
+              To use the chat feature, please enter your OpenAI API key. Your key is stored locally and never sent to our servers.
+            </p>
+            <input
+              type="password"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 mb-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="sk-..."
+              value={apiKeyInput}
+              onChange={(e) => setApiKeyInput(e.target.value)}
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                onClick={handleSaveApiKey}
+                disabled={!apiKeyInput}
+              >
+                Save API Key
+              </button>
+              <button
+                className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+                onClick={() => setShowApiKeyModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-3">
+              Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">OpenAI Platform</a>
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Chat Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -391,6 +411,17 @@ const ChatPage = () => {
               )}
             </button>
           </form>
+          {!userApiKey && (
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              <button
+                onClick={() => setShowApiKeyModal(true)}
+                className="text-blue-600 hover:underline"
+              >
+                Enter your OpenAI API key
+              </button>
+              {' '}to start chatting
+            </p>
+          )}
         </div>
       </div>
     </div>

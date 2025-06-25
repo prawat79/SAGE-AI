@@ -1,313 +1,185 @@
-import { supabase, TABLES } from '../lib/supabase';
-import aiService from './aiService';
-import characterService from './characterService';
+import { supabase } from '../lib/supabase';
 
-class ConversationService {
-  // Create new conversation
-  async createConversation(userId, characterId) {
+export class ConversationService {
+  static async createConversation(userId, characterId, title = null) {
     try {
+      const conversationData = {
+        user_id: userId,
+        character_id: characterId,
+        title: title || `Chat with Character`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
-        .from(TABLES.CONVERSATIONS)
-        .insert([{
-          user_id: userId,
-          character_id: characterId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_active: true
-        }])
+        .from('conversations')
+        .insert([conversationData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        // Return a temporary conversation for demo purposes
+        return {
+          id: `temp_${Date.now()}`,
+          ...conversationData
+        };
+      }
+
       return data;
     } catch (error) {
       console.error('Error creating conversation:', error);
-      // Return fallback conversation ID
+      // Return a temporary conversation for demo purposes
       return {
         id: `temp_${Date.now()}`,
         user_id: userId,
         character_id: characterId,
+        title: title || `Chat with Character`,
         created_at: new Date().toISOString(),
-        is_active: true
+        updated_at: new Date().toISOString()
       };
     }
   }
 
-  // Get conversation by ID
-  async getConversation(id) {
+  static async getConversation(id) {
     try {
       const { data, error } = await supabase
-        .from(TABLES.CONVERSATIONS)
+        .from('conversations')
         .select('*')
         .eq('id', id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        return null;
+      }
+
       return data;
     } catch (error) {
       console.error('Error getting conversation:', error);
-      throw error;
+      return null;
     }
   }
 
-  // Get user's conversations
-  async getUserConversations(userId, limit = 20) {
+  static async getUserConversations(userId) {
     try {
       const { data, error } = await supabase
-        .from(TABLES.CONVERSATIONS)
+        .from('conversations')
         .select(`
           *,
-          character:characters(id, name, avatar_url),
-          messages(content, created_at)
+          characters(id, name, avatar_url)
         `)
         .eq('user_id', userId)
-        .eq('is_active', true)
-        .order('updated_at', { ascending: false })
-        .limit(limit);
+        .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        return [];
+      }
+
       return data || [];
     } catch (error) {
-      console.error('Error fetching user conversations:', error);
+      console.error('Error getting user conversations:', error);
       return [];
     }
   }
 
-  // Get messages for a conversation
-  async getMessages(conversationId) {
+  static async getMessages(conversationId) {
     try {
       const { data, error } = await supabase
-        .from(TABLES.MESSAGES)
+        .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Supabase error:', error);
+        return [];
+      }
+
+      return data || [];
     } catch (error) {
       console.error('Error getting messages:', error);
-      throw error;
+      return [];
     }
   }
 
-  // Send message with streaming support
-  async sendMessage(conversationId, content, sender, character) {
+  static async saveMessage(conversationId, content, senderType) {
     try {
-      // Create user message
-      const userMessage = {
+      const messageData = {
         conversation_id: conversationId,
         content,
-        sender: 'user',
+        sender_type: senderType,
         created_at: new Date().toISOString()
       };
 
-      const { data: savedUserMessage, error: userError } = await supabase
-        .from(TABLES.MESSAGES)
-        .insert(userMessage)
-        .select()
-        .single();
-
-      if (userError) throw userError;
-
-      // Get conversation context
-      const context = await this.getConversationContext(conversationId, character);
-
-      // Generate AI response with streaming
-      const aiResponse = await aiService.generateResponse(
-        [savedUserMessage],
-        character,
-        context
-      );
-
-      // Create AI message
-      const aiMessage = {
-        conversation_id: conversationId,
-        content: '',
-        sender: 'character',
-        created_at: new Date().toISOString()
-      };
-
-      const { data: savedAiMessage, error: aiError } = await supabase
-        .from(TABLES.MESSAGES)
-        .insert(aiMessage)
-        .select()
-        .single();
-
-      if (aiError) throw aiError;
-
-      // Update character memory and emotional state
-      await characterService.addConversationToMemory(character.id, {
-        user: content,
-        character: aiResponse
-      });
-
-      const sentiment = await aiService.analyzeSentiment(aiResponse);
-      await characterService.updateCharacterEmotionalState(character.id, sentiment);
-
-      return {
-        userMessage: savedUserMessage,
-        aiMessage: savedAiMessage,
-        stream: aiResponse
-      };
-    } catch (error) {
-      console.error('Error sending message:', error);
-      throw error;
-    }
-  }
-
-  // Get conversation context
-  async getConversationContext(conversationId, character) {
-    try {
-      // Get recent messages
-      const messages = await this.getMessages(conversationId);
-      const recentMessages = messages.slice(-10);
-
-      // Get character memory and emotional state
-      const characterMemory = await characterService.getCharacterMemory(character.id);
-      const emotionalState = await characterService.getCharacterEmotionalState(character.id);
-
-      return {
-        conversationHistory: recentMessages,
-        characterMemory,
-        emotionalState
-      };
-    } catch (error) {
-      console.error('Error getting conversation context:', error);
-      throw error;
-    }
-  }
-
-  // Save individual message
-  async saveMessage(conversationId, content, sender) {
-    try {
       const { data, error } = await supabase
-        .from(TABLES.MESSAGES)
-        .insert([{
-          conversation_id: conversationId,
-          content,
-          sender,
-          created_at: new Date().toISOString()
-        }])
+        .from('messages')
+        .insert([messageData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        // Return a temporary message for demo purposes
+        return {
+          id: `temp_${Date.now()}`,
+          ...messageData
+        };
+      }
+
       return data;
     } catch (error) {
       console.error('Error saving message:', error);
-      // Return fallback message
+      // Return a temporary message for demo purposes
       return {
         id: `temp_${Date.now()}`,
         conversation_id: conversationId,
         content,
-        sender,
+        sender_type: senderType,
         created_at: new Date().toISOString()
       };
     }
   }
 
-  // Update conversation timestamp
-  async updateConversationTimestamp(conversationId) {
+  static async updateConversationTimestamp(conversationId) {
     try {
       const { error } = await supabase
-        .from(TABLES.CONVERSATIONS)
+        .from('conversations')
         .update({ updated_at: new Date().toISOString() })
         .eq('id', conversationId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+      }
     } catch (error) {
       console.error('Error updating conversation timestamp:', error);
     }
   }
 
-  // Delete conversation
-  async deleteConversation(conversationId) {
+  static async deleteConversation(conversationId) {
     try {
+      // First delete all messages
+      await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', conversationId);
+
+      // Then delete the conversation
       const { error } = await supabase
-        .from(TABLES.CONVERSATIONS)
+        .from('conversations')
         .delete()
         .eq('id', conversationId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
     } catch (error) {
       console.error('Error deleting conversation:', error);
       throw error;
     }
   }
-
-  // Clear conversation
-  async clearConversation(conversationId) {
-    try {
-      const { error } = await supabase
-        .from(TABLES.MESSAGES)
-        .delete()
-        .eq('conversation_id', conversationId);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error clearing conversation:', error);
-      throw error;
-    }
-  }
-
-  // Get conversation statistics
-  async getConversationStats(conversationId) {
-    try {
-      const { data, error } = await supabase
-        .from(TABLES.MESSAGES)
-        .select('id, sender')
-        .eq('conversation_id', conversationId);
-
-      if (error) throw error;
-      
-      const stats = {
-        total: data.length,
-        user: data.filter(m => m.sender === 'user').length,
-        character: data.filter(m => m.sender === 'character').length
-      };
-      
-      return stats;
-    } catch (error) {
-      console.error('Error fetching conversation stats:', error);
-      return { total: 0, user: 0, character: 0 };
-    }
-  }
-
-  // Search messages in conversation
-  async searchMessages(conversationId, query) {
-    try {
-      const { data, error } = await supabase
-        .from(TABLES.MESSAGES)
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .ilike('content', `%${query}%`)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error searching messages:', error);
-      return [];
-    }
-  }
-
-  async summarizeConversation(conversationId) {
-    try {
-      const messages = await this.getMessages(conversationId);
-      const summary = await aiService.generateSummary(messages);
-      
-      const { error } = await supabase
-        .from(TABLES.CONVERSATIONS)
-        .update({ summary })
-        .eq('id', conversationId);
-
-      if (error) throw error;
-      return summary;
-    } catch (error) {
-      console.error('Error summarizing conversation:', error);
-      throw error;
-    }
-  }
 }
 
-export default new ConversationService();
+export default ConversationService;

@@ -3,70 +3,66 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Grid, List, Star, MessageCircle, Calendar, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { CharacterService } from '../services/characterService';
-import SearchAndFilter from '../components/SearchAndFilter';
+import ConversationService from '../services/conversationService';
 
 const CharacterCard = ({ character, onStartChat }) => {
-  const {
-    id,
-    name,
-    description,
-    category,
-    personality,
-    chat_count,
-    rating,
-    tags,
-    created_at,
-    avatar_url
-  } = character;
+  const navigate = useNavigate();
+
+  const handleViewDetails = () => {
+    navigate(`/character/${character.id}`);
+  };
 
   const handleStartChat = (e) => {
-    e.preventDefault();
+    e.stopPropagation();
     if (onStartChat) {
       onStartChat(character);
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group">
+    <div 
+      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer"
+      onClick={handleViewDetails}
+    >
       <div className="p-6">
         <div className="flex items-start space-x-4 mb-4">
           <div className="flex-shrink-0">
             <img
-              src={avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`}
-              alt={name}
+              src={character.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${character.name}`}
+              alt={character.name}
               className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
             />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-2">
               <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-100 rounded-full">
-                {category}
+                {character.category}
               </span>
               <div className="flex items-center space-x-2">
                 <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                <span className="text-sm text-gray-600">{rating || 4.5}</span>
+                <span className="text-sm text-gray-600">{character.rating || 4.5}</span>
               </div>
             </div>
             
             <h3 className="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors group-hover:text-blue-600">
-              {name}
+              {character.name}
             </h3>
           </div>
         </div>
         
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-          {description}
+          {character.description}
         </p>
         
-        {personality && (
+        {character.personality && (
           <p className="text-gray-500 text-xs mb-4 italic">
-            Personality: {personality}
+            Personality: {character.personality}
           </p>
         )}
         
-        {tags && tags.length > 0 && (
+        {character.tags && character.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {tags.slice(0, 3).map((tag, index) => (
+            {character.tags.slice(0, 3).map((tag, index) => (
               <span 
                 key={index}
                 className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md"
@@ -74,9 +70,9 @@ const CharacterCard = ({ character, onStartChat }) => {
                 #{tag}
               </span>
             ))}
-            {tags.length > 3 && (
+            {character.tags.length > 3 && (
               <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md">
-                +{tags.length - 3} more
+                +{character.tags.length - 3} more
               </span>
             )}
           </div>
@@ -95,11 +91,11 @@ const CharacterCard = ({ character, onStartChat }) => {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
               <Calendar className="h-4 w-4" />
-              <span>{new Date(created_at).toLocaleDateString()}</span>
+              <span>{new Date(character.created_at).toLocaleDateString()}</span>
             </div>
             <div className="flex items-center space-x-1">
               <MessageCircle className="h-4 w-4" />
-              <span>{chat_count || 0} chats</span>
+              <span>{character.chat_count || 0} chats</span>
             </div>
           </div>
         </div>
@@ -132,9 +128,6 @@ const ExplorePage = () => {
       const response = await CharacterService.getCharacters({
         search: filters.search,
         category: filters.category,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
-        page: 1,
         limit: 20
       });
       setCharacters(response.data || []);
@@ -146,8 +139,8 @@ const ExplorePage = () => {
     }
   };
 
-  const handleFilterChange = (newFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
   };
 
   const handleStartChat = async (character) => {
@@ -158,28 +151,28 @@ const ExplorePage = () => {
 
     try {
       // Create a new conversation
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.access_token}`
-        },
-        body: JSON.stringify({
-          character_id: character.id,
-          title: `Chat with ${character.name}`
-        })
-      });
-
-      if (response.ok) {
-        const conversation = await response.json();
-        navigate(`/chat/${conversation.id}`);
-      } else {
-        console.error('Failed to create conversation');
-      }
+      const conversation = await ConversationService.createConversation(
+        user.id,
+        character.id,
+        `Chat with ${character.name}`
+      );
+      
+      // Navigate to chat page
+      navigate(`/chat/${conversation.id}`);
     } catch (error) {
       console.error('Error starting chat:', error);
     }
   };
+
+  const categories = [
+    { value: '', label: 'All Categories' },
+    { value: 'Anime', label: 'Anime' },
+    { value: 'Game', label: 'Game' },
+    { value: 'Fictional', label: 'Fictional' },
+    { value: 'Historical', label: 'Historical' },
+    { value: 'Celebrity', label: 'Celebrity' },
+    { value: 'Original', label: 'Original' }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -201,10 +194,36 @@ const ExplorePage = () => {
       {/* Search and Filters */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <SearchAndFilter 
-            filters={filters}
-            onFilterChange={handleFilterChange}
-          />
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  placeholder="Search characters..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            
+            {/* Category Filter */}
+            <div className="lg:w-48">
+              <select
+                value={filters.category}
+                onChange={(e) => handleFilterChange('category', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {categories.map((category) => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           
           {/* View Mode Toggle */}
           <div className="flex items-center justify-between mt-4 pt-4 border-t">

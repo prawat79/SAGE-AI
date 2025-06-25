@@ -9,41 +9,26 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [featuredCharacters, setFeaturedCharacters] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalCharacters: 0,
-    totalConversations: 0,
-    activeUsers: 0
+  const [stats] = useState({
+    totalCharacters: 1250,
+    totalConversations: 45000,
+    activeUsers: 8500
   });
 
   useEffect(() => {
     loadFeaturedCharacters();
-    loadStats();
   }, []);
 
   const loadFeaturedCharacters = async () => {
     try {
       const response = await CharacterService.getCharacters({
-        limit: 6,
-        sort: 'popular'
+        limit: 6
       });
       setFeaturedCharacters(response.data || []);
     } catch (error) {
       console.error('Error loading featured characters:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadStats = async () => {
-    try {
-      // Mock stats for now - in real app, this would come from API
-      setStats({
-        totalCharacters: 1250,
-        totalConversations: 45000,
-        activeUsers: 8500
-      });
-    } catch (error) {
-      console.error('Error loading stats:', error);
     }
   };
 
@@ -54,29 +39,13 @@ const HomePage = () => {
     }
 
     try {
-      // Create a new conversation
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.access_token}`
-        },
-        body: JSON.stringify({
-          character_id: character.id,
-          title: `Chat with ${character.name}`
-        })
-      });
-
-      if (response.ok) {
-        const conversation = await response.json();
-        navigate(`/chat/${conversation.data.id}`);
-      } else {
-        console.error('Failed to create conversation');
-      }
+      // For demo purposes, navigate directly to explore page
+      navigate('/explore');
     } catch (error) {
       console.error('Error starting chat:', error);
     }
   };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -184,7 +153,7 @@ const HomePage = () => {
                     <img
                       src={character.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${character.name}`}
                       alt={character.name}
-                      className="w-16 h-16 rounded-full bg-gray-100"
+                      className="w-16 h-16 rounded-full bg-gray-100 object-cover"
                     />
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">

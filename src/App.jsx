@@ -1,25 +1,39 @@
 import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import Navbar from './components/layout/Navbar';
+import HomePage from './pages/HomePage';
+import ExplorePage from './pages/ExplorePage';
+import ChatPage from './pages/ChatPage';
+import CharacterDetailPage from './pages/CharacterDetailPage';
+import CreateCharacterPage from './pages/CreateCharacterPage';
+import ProfilePage from './pages/ProfilePage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import PromptStorePage from './pages/PromptStorePage';
 
-const App = () => {
+function App() {
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1 style={{ color: 'blue' }}>FlowGPT Clone - Test</h1>
-      <p>If you can see this, React is working!</p>
-      <div style={{ 
-        backgroundColor: '#f0f0f0', 
-        padding: '10px', 
-        borderRadius: '5px',
-        marginTop: '20px'
-      }}>
-        <h2>Status Check:</h2>
-        <ul>
-          <li>✅ React is mounting</li>
-          <li>✅ JSX is rendering</li>
-          <li>✅ Styles are working</li>
-        </ul>
+    <AuthProvider>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/prompts" element={<PromptStorePage />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/chat/:conversationId" element={<ChatPage />} />
+            <Route path="/character/:id" element={<CharacterDetailPage />} />
+            <Route path="/create-character" element={<CreateCharacterPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+          </Routes>
+        </main>
       </div>
-    </div>
+    </AuthProvider>
   );
-};
+}
 
 export default App;
