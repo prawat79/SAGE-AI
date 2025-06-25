@@ -1,40 +1,24 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import Navbar from './components/layout/Navbar';
-import HomePage from './pages/HomePage';
-import ExplorePage from './pages/ExplorePage';
-import ChatPage from './pages/ChatPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import ProfilePage from './pages/ProfilePage';
-import CreateCharacterPage from './pages/CreateCharacterPage';
-import CharacterDetailPage from './pages/CharacterDetailPage';
-import PromptStorePage from './pages/PromptStorePage';
-import PromptDetailPage from './pages/PromptDetailPage';
 
 const App = () => {
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <main>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="/chat/:characterId" element={<ChatPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/create-character" element={<CreateCharacterPage />} />
-            <Route path="/character/:id" element={<CharacterDetailPage />} />
-            <Route path="/prompts" element={<PromptStorePage />} />
-            <Route path="/prompt/:id" element={<PromptDetailPage />} />
-          </Routes>
-        </main>
+    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      <h1 style={{ color: 'blue' }}>FlowGPT Clone - Test</h1>
+      <p>If you can see this, React is working!</p>
+      <div style={{ 
+        backgroundColor: '#f0f0f0', 
+        padding: '10px', 
+        borderRadius: '5px',
+        marginTop: '20px'
+      }}>
+        <h2>Status Check:</h2>
+        <ul>
+          <li>✅ React is mounting</li>
+          <li>✅ JSX is rendering</li>
+          <li>✅ Styles are working</li>
+        </ul>
       </div>
-    </AuthProvider>
+    </div>
   );
 };
 

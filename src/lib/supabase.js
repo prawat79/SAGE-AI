@@ -1,7 +1,30 @@
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config/constants';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Supabase configuration with fallback for demo mode
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://demo.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'demo-key';
+
+// Create Supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 2
+    }
+  }
+});
+
+// Helper function to check if Supabase is properly configured
+export const isSupabaseConfigured = () => {
+  return supabaseUrl !== 'https://demo.supabase.co' && 
+         supabaseAnonKey !== 'demo-key' &&
+         import.meta.env.VITE_SUPABASE_URL &&
+         import.meta.env.VITE_SUPABASE_ANON_KEY;
+};
 
 // Helper function to handle Supabase errors
 export const handleSupabaseError = (error) => {

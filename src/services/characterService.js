@@ -1,4 +1,4 @@
-import { supabase, TABLES, CHARACTER_CATEGORIES, CHARACTER_TRAITS } from '../lib/supabase';
+import { supabase, TABLES, CHARACTER_CATEGORIES, CHARACTER_TRAITS, handleSupabaseError } from '../lib/supabase';
 
 class CharacterService {
   // Get all characters with pagination and filtering

@@ -1,14 +1,13 @@
-import { supabase } from '../lib/supabase';
+import { supabase, TABLES } from '../lib/supabase';
 import aiService from './aiService';
 import characterService from './characterService';
-import { DB_CONFIG } from '../config/constants';
 
 class ConversationService {
   // Create new conversation
   async createConversation(userId, characterId) {
     try {
       const { data, error } = await supabase
-        .from(DB_CONFIG.TABLES.CONVERSATIONS)
+        .from(TABLES.CONVERSATIONS)
         .insert([{
           user_id: userId,
           character_id: characterId,
@@ -38,7 +37,7 @@ class ConversationService {
   async getConversation(id) {
     try {
       const { data, error } = await supabase
-        .from(DB_CONFIG.TABLES.CONVERSATIONS)
+        .from(TABLES.CONVERSATIONS)
         .select('*')
         .eq('id', id)
         .single();
@@ -55,7 +54,7 @@ class ConversationService {
   async getUserConversations(userId, limit = 20) {
     try {
       const { data, error } = await supabase
-        .from(DB_CONFIG.TABLES.CONVERSATIONS)
+        .from(TABLES.CONVERSATIONS)
         .select(`
           *,
           character:characters(id, name, avatar_url),
@@ -78,7 +77,7 @@ class ConversationService {
   async getMessages(conversationId) {
     try {
       const { data, error } = await supabase
-        .from(DB_CONFIG.TABLES.MESSAGES)
+        .from(TABLES.MESSAGES)
         .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
@@ -103,7 +102,7 @@ class ConversationService {
       };
 
       const { data: savedUserMessage, error: userError } = await supabase
-        .from(DB_CONFIG.TABLES.MESSAGES)
+        .from(TABLES.MESSAGES)
         .insert(userMessage)
         .select()
         .single();
@@ -129,7 +128,7 @@ class ConversationService {
       };
 
       const { data: savedAiMessage, error: aiError } = await supabase
-        .from(DB_CONFIG.TABLES.MESSAGES)
+        .from(TABLES.MESSAGES)
         .insert(aiMessage)
         .select()
         .single();
@@ -182,7 +181,7 @@ class ConversationService {
   async saveMessage(conversationId, content, sender) {
     try {
       const { data, error } = await supabase
-        .from(DB_CONFIG.TABLES.MESSAGES)
+        .from(TABLES.MESSAGES)
         .insert([{
           conversation_id: conversationId,
           content,
@@ -211,7 +210,7 @@ class ConversationService {
   async updateConversationTimestamp(conversationId) {
     try {
       const { error } = await supabase
-        .from(DB_CONFIG.TABLES.CONVERSATIONS)
+        .from(TABLES.CONVERSATIONS)
         .update({ updated_at: new Date().toISOString() })
         .eq('id', conversationId);
 
@@ -225,7 +224,7 @@ class ConversationService {
   async deleteConversation(conversationId) {
     try {
       const { error } = await supabase
-        .from(DB_CONFIG.TABLES.CONVERSATIONS)
+        .from(TABLES.CONVERSATIONS)
         .delete()
         .eq('id', conversationId);
 
@@ -240,7 +239,7 @@ class ConversationService {
   async clearConversation(conversationId) {
     try {
       const { error } = await supabase
-        .from(DB_CONFIG.TABLES.MESSAGES)
+        .from(TABLES.MESSAGES)
         .delete()
         .eq('conversation_id', conversationId);
 
@@ -255,7 +254,7 @@ class ConversationService {
   async getConversationStats(conversationId) {
     try {
       const { data, error } = await supabase
-        .from(DB_CONFIG.TABLES.MESSAGES)
+        .from(TABLES.MESSAGES)
         .select('id, sender')
         .eq('conversation_id', conversationId);
 
@@ -278,7 +277,7 @@ class ConversationService {
   async searchMessages(conversationId, query) {
     try {
       const { data, error } = await supabase
-        .from(DB_CONFIG.TABLES.MESSAGES)
+        .from(TABLES.MESSAGES)
         .select('*')
         .eq('conversation_id', conversationId)
         .ilike('content', `%${query}%`)
@@ -298,7 +297,7 @@ class ConversationService {
       const summary = await aiService.generateSummary(messages);
       
       const { error } = await supabase
-        .from(DB_CONFIG.TABLES.CONVERSATIONS)
+        .from(TABLES.CONVERSATIONS)
         .update({ summary })
         .eq('id', conversationId);
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, TrendingUp, Star, Users, MessageCircle, Filter, Grid, List, ArrowRight, Bookmark, Heart, Eye } from 'lucide-react';
+import { Search, TrendingUp, Star, Users, MessageCircle, Filter, Grid, List, ArrowRight, Bookmark, Heart, Eye, Key } from 'lucide-react';
 
 const PromptStorePage = () => {
   const navigate = useNavigate();
@@ -17,6 +17,10 @@ const PromptStorePage = () => {
     gender: 'all'
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [userApiKey, setUserApiKey] = useState(() => localStorage.getItem('userApiKey') || '');
+  const [apiKeyError, setApiKeyError] = useState('');
 
   // FlowGPT-style categories
   const categories = [
@@ -70,100 +74,13 @@ const PromptStorePage = () => {
     { id: 'most-saved', name: 'Most Saved', icon: Bookmark }
   ];
 
-  // Sample prompts data (in real app, fetch from API)
-  const samplePrompts = [
-    {
-      id: '1',
-      title: 'Creative Writing Assistant',
-      description: 'Generate compelling stories, characters, and plot ideas for your creative writing projects.',
-      category: 'academic',
-      style: 'proactive',
-      gender: 'all',
-      author: 'AI Writer',
-      avatar: '/api/placeholder/40/40',
-      interactions: 15420,
-      rating: 4.8,
-      saves: 2341,
-      tags: ['writing', 'creativity', 'storytelling'],
-      trending: true,
-      featured: true
-    },
-    {
-      id: '2',
-      title: 'Code Debugging Expert',
-      description: 'Debug your code efficiently with step-by-step guidance and best practices.',
-      category: 'programming',
-      style: 'proactive',
-      gender: 'all',
-      author: 'DevMaster',
-      avatar: '/api/placeholder/40/40',
-      interactions: 8932,
-      rating: 4.9,
-      saves: 1876,
-      tags: ['coding', 'debugging', 'programming'],
-      trending: true
-    },
-    {
-      id: '3',
-      title: 'Marketing Campaign Strategist',
-      description: 'Create effective marketing campaigns and strategies for your business.',
-      category: 'marketing',
-      style: 'proactive',
-      gender: 'all',
-      author: 'MarketPro',
-      avatar: '/api/placeholder/40/40',
-      interactions: 12567,
-      rating: 4.7,
-      saves: 3421,
-      tags: ['marketing', 'strategy', 'business'],
-      trending: false
-    },
-    {
-      id: '4',
-      title: 'Anime Character Creator',
-      description: 'Design unique anime characters with detailed backstories and personalities.',
-      category: 'anime',
-      style: 'romantic',
-      gender: 'female',
-      author: 'AnimeArt',
-      avatar: '/api/placeholder/40/40',
-      interactions: 23451,
-      rating: 4.6,
-      saves: 5432,
-      tags: ['anime', 'character', 'creative'],
-      trending: true,
-      featured: true
-    },
-    {
-      id: '5',
-      title: 'Job Interview Coach',
-      description: 'Practice job interviews and get personalized feedback to land your dream job.',
-      category: 'job-hunting',
-      style: 'caring',
-      gender: 'all',
-      author: 'CareerCoach',
-      avatar: '/api/placeholder/40/40',
-      interactions: 9876,
-      rating: 4.8,
-      saves: 2109,
-      tags: ['career', 'interview', 'job'],
-      trending: false
-    },
-    {
-      id: '6',
-      title: 'Fantasy World Builder',
-      description: 'Create immersive fantasy worlds with rich lore, characters, and storylines.',
-      category: 'game',
-      style: 'fantasy',
-      gender: 'all',
-      author: 'WorldCrafter',
-      avatar: '/api/placeholder/40/40',
-      interactions: 18765,
-      rating: 4.9,
-      saves: 4321,
-      tags: ['fantasy', 'worldbuilding', 'rpg'],
-      trending: true
-    }
+  // Supported model providers
+  const modelProviders = [
+    { id: 'openai', name: 'OpenAI (ChatGPT, GPT-4, etc.)' },
+    { id: 'anthropic', name: 'Anthropic – Claude' },
+    { id: 'gemini', name: 'Google Gemini' },
+    { id: 'grok', name: 'xAI Grok' },
+    { id: 'qwen', name: 'Alibaba Qwen' }
   ];
 
   useEffect(() => {
@@ -172,58 +89,76 @@ const PromptStorePage = () => {
 
   const fetchPrompts = async () => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      let filteredPrompts = [...samplePrompts];
-      
-      // Apply filters
-      if (filters.category !== 'all') {
-        filteredPrompts = filteredPrompts.filter(p => p.category === filters.category);
-      }
-      
-      if (filters.style !== 'all') {
-        filteredPrompts = filteredPrompts.filter(p => p.style === filters.style);
-      }
-      
-      if (filters.gender !== 'all') {
-        filteredPrompts = filteredPrompts.filter(p => p.gender === filters.gender || p.gender === 'all');
-      }
-      
-      if (filters.search) {
-        filteredPrompts = filteredPrompts.filter(p => 
-          p.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-          p.description.toLowerCase().includes(filters.search.toLowerCase()) ||
-          p.tags.some(tag => tag.toLowerCase().includes(filters.search.toLowerCase()))
-        );
-      }
-      
-      // Apply sorting
-      switch (filters.sort) {
-        case 'trending':
-          filteredPrompts.sort((a, b) => b.trending - a.trending || b.interactions - a.interactions);
-          break;
-        case 'popular':
-          filteredPrompts.sort((a, b) => b.interactions - a.interactions);
-          break;
-        case 'newest':
-          // In real app, sort by created_at
-          break;
-        case 'rating':
-          filteredPrompts.sort((a, b) => b.rating - a.rating);
-          break;
-        case 'most-saved':
-          filteredPrompts.sort((a, b) => b.saves - a.saves);
-          break;
-      }
-      
-      setPrompts(filteredPrompts);
+    try {
+      // Build query params from filters
+      const params = new URLSearchParams();
+      if (filters.category && filters.category !== 'all') params.append('category', filters.category);
+      if (filters.style && filters.style !== 'all') params.append('style', filters.style);
+      if (filters.gender && filters.gender !== 'all') params.append('gender', filters.gender);
+      if (filters.search) params.append('search', filters.search);
+      if (filters.sort) params.append('sort', filters.sort);
+      params.append('limit', 24);
+      params.append('page', 1);
+
+      const res = await fetch(`/api/characters?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch prompts');
+      const data = await res.json();
+      setPrompts(data.characters || []);
+    } catch (err) {
+      setPrompts([]);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
+
+  // Provider state
+  const [selectedProvider, setSelectedProvider] = useState(() => localStorage.getItem('userProvider') || 'openai');
+
+  // Handler for opening the API key modal
+  const openApiKeyModal = () => {
+    setApiKeyInput(userApiKey || '');
+    setApiKeyError('');
+    setSelectedProvider(localStorage.getItem('userProvider') || 'openai');
+    setShowApiKeyModal(true);
+  };
+
+  // Handler for saving the API key and provider
+  const handleSaveApiKey = () => {
+    localStorage.setItem('userApiKey', apiKeyInput);
+    localStorage.setItem('userProvider', selectedProvider);
+    setUserApiKey(apiKeyInput);
+    setShowApiKeyModal(false);
+    setApiKeyInput('');
+    setApiKeyError('');
+  };
+
+  // Handler for removing the API key and provider
+  const handleRemoveApiKey = () => {
+    localStorage.removeItem('userApiKey');
+    localStorage.removeItem('userProvider');
+    setUserApiKey('');
+    setApiKeyInput('');
+    setShowApiKeyModal(false);
+    setApiKeyError('');
+    setSelectedProvider('openai');
+  };
+
+  // Handler for Try Prompt button
+  const handleTryPrompt = (promptId) => {
+    if (!userApiKey) {
+      setApiKeyError('Please enter your AI API key to use chat features.');
+      openApiKeyModal();
+      return;
+    }
+    navigate(`/prompt/${promptId}`);
+  };
+
+  // Toggle show/hide for API key input
+  const [showApiKey, setShowApiKey] = useState(false);
 
   const PromptCard = ({ prompt }) => (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group">
@@ -233,7 +168,6 @@ const PromptStorePage = () => {
             {categories.find(c => c.id === prompt.category)?.icon || '🤖'}
           </div>
         </div>
-        
         {prompt.trending && (
           <div className="absolute top-2 left-2">
             <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
@@ -242,7 +176,6 @@ const PromptStorePage = () => {
             </span>
           </div>
         )}
-        
         {prompt.featured && (
           <div className="absolute top-2 right-2">
             <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">
@@ -251,13 +184,11 @@ const PromptStorePage = () => {
           </div>
         )}
       </div>
-      
       <div className="p-4">
-        <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-1">{prompt.title}</h3>
+        <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-1">{prompt.title || prompt.name}</h3>
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">{prompt.description}</p>
-        
         <div className="flex flex-wrap gap-1 mb-3">
-          {prompt.tags.slice(0, 3).map((tag, index) => (
+          {(prompt.tags && prompt.tags.length > 0 ? prompt.tags : []).slice(0, 3).map((tag, index) => (
             <span
               key={index}
               className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
@@ -266,34 +197,31 @@ const PromptStorePage = () => {
             </span>
           ))}
         </div>
-        
         <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
               <MessageCircle className="h-4 w-4" />
-              <span>{prompt.interactions.toLocaleString()}</span>
+              <span>{(prompt.interactions || prompt.chat_count || 0).toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-1">
               <Star className="h-4 w-4 text-yellow-500" />
-              <span>{prompt.rating}</span>
+              <span>{prompt.rating || 0}</span>
             </div>
             <div className="flex items-center gap-1">
               <Bookmark className="h-4 w-4" />
-              <span>{prompt.saves}</span>
+              <span>{prompt.saves || 0}</span>
             </div>
           </div>
         </div>
-        
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img
-              src={prompt.avatar}
-              alt={prompt.author}
+              src={prompt.avatar || prompt.avatar_url || '/api/placeholder/40/40'}
+              alt={prompt.author || prompt.created_by || 'Author'}
               className="w-6 h-6 rounded-full"
             />
-            <span className="text-sm text-gray-600">{prompt.author}</span>
+            <span className="text-sm text-gray-600">{prompt.author || prompt.created_by || 'Unknown'}</span>
           </div>
-          
           <div className="flex gap-2">
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <Heart className="h-4 w-4 text-gray-400 hover:text-red-500" />
@@ -303,9 +231,12 @@ const PromptStorePage = () => {
             </button>
           </div>
         </div>
-        
         <Link
-          to={`/prompt/${prompt.id}`}
+          to="#"
+          onClick={e => {
+            e.preventDefault();
+            handleTryPrompt(prompt.id);
+          }}
           className="block w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-center mt-3"
         >
           Try Prompt
@@ -316,6 +247,89 @@ const PromptStorePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Floating API Key Button */}
+      <button
+        className="fixed right-6 bottom-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center"
+        title="Enter your AI API Key"
+        onClick={openApiKeyModal}
+      >
+        <Key className="h-6 w-6" />
+      </button>
+
+      {/* API Key Modal */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={() => { setShowApiKeyModal(false); setApiKeyError(''); }}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Key className="h-5 w-5" /> Enter Your AI API Key
+            </h2>
+            {apiKeyError && <div className="mb-3 text-red-600 text-sm">{apiKeyError}</div>}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Model Provider</label>
+              <select
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={selectedProvider}
+                onChange={e => setSelectedProvider(e.target.value)}
+              >
+                {modelProviders.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="relative mb-4">
+              <input
+                type={showApiKey ? 'text' : 'password'}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={selectedProvider === 'openai' ? 'sk-...' : 'Enter your API key'}
+                value={apiKeyInput}
+                onChange={e => setApiKeyInput(e.target.value)}
+                autoFocus
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                onClick={() => setShowApiKey(v => !v)}
+                tabIndex={-1}
+              >
+                {showApiKey ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {userApiKey && (
+              <div className="mb-3 text-xs text-gray-500">
+                <span className="font-semibold">Current key:</span> <span className="font-mono">{'*'.repeat(userApiKey.length > 6 ? 6 : userApiKey.length)}{userApiKey.length > 6 ? '...' : ''}</span>
+                <span className="ml-2">({modelProviders.find(p => p.id === (localStorage.getItem('userProvider') || 'openai'))?.name})</span>
+              </div>
+            )}
+            <button
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold mb-2"
+              onClick={handleSaveApiKey}
+              disabled={!apiKeyInput}
+            >
+              Save API Key
+            </button>
+            {userApiKey && (
+              <button
+                className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+                onClick={handleRemoveApiKey}
+              >
+                Remove API Key
+              </button>
+            )}
+            <p className="text-xs text-gray-500 mt-3">
+              Your API key is stored only in your browser and never sent to our server.<br/>
+              Select your provider and enter the correct key for that service.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

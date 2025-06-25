@@ -1,40 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-
-// Placeholder data - in a real app, you'd fetch this based on ID
-const samplePrompts = [
-  {
-    id: '1',
-    title: 'Creative Story Writing Assistant',
-    description: 'Generate compelling plot ideas, character backstories, and dialogue for your next masterpiece. Perfect for novelists and screenwriters. This prompt helps you overcome writer\'s block and explore new narrative avenues. It can suggest twists, character arcs, and setting details to enrich your story.',
-    category: 'Writing',
-    tags: ['storytelling', 'creative writing', 'fiction', 'narrative', 'plot development'],
-    author: 'AI Enthusiast',
-    interactions: 1250,
-    fullPrompt: 'Imagine you are an AI assistant specialized in creative writing. A user is stuck on their novel about a detective in a futuristic city. Provide three distinct plot twists, two complex secondary characters with hidden motives, and a unique piece of technology that could be central to the mystery.',
-    exampleUsage: 'User: I need help with my sci-fi detective novel!\nAI: Okay, for plot twists: 1. The lead detective is a clone of the original, who died years ago. 2. The \'victim\' faked their death to expose a city-wide conspiracy. 3. The central AI governing the city is the true antagonist, subtly manipulating events...'
-  },
-  {
-    id: '2',
-    title: 'Code Debugging Helper',
-    description: 'Describe your coding problem and get suggestions for debugging. Supports Python, JavaScript, and Java. Helps identify common errors and suggests logical steps to isolate the bug.',
-    category: 'Programming',
-    tags: ['debugging', 'coding', 'development', 'problem solving', 'software engineering'],
-    author: 'DevGuru',
-    interactions: 980,
-    fullPrompt: 'You are an expert code debugger. A user presents a Python function that is not returning the expected output. Guide them through the debugging process. Ask for the code, expected output, and actual output. Suggest print statements, and explain common pitfalls related to their problem description.',
-    exampleUsage: 'User: My Python sorting function isn\'t working.\nAI: Understood. Can you please share the function code, an example input, what you expect as output, and what you are actually getting? Let\'s start by adding some print statements to check the state of your list at different stages...'
-  },
-  // Add other prompts if needed, matching IDs from HomePage
-];
 
 const PromptDetailPage = () => {
   const { promptId } = useParams();
-  const prompt = samplePrompts.find(p => p.id === promptId);
+  const [prompt, setPrompt] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!prompt) {
-    return <div className="text-center text-xl text-gray-400 py-10">Prompt not found.</div>;
-  }
+  useEffect(() => {
+    const fetchPrompt = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/characters/${promptId}`);
+        if (!res.ok) throw new Error('Prompt not found');
+        const data = await res.json();
+        setPrompt(data.character || null);
+      } catch (err) {
+        setPrompt(null);
+        setError('Prompt not found.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (promptId) fetchPrompt();
+  }, [promptId]);
+
+  if (loading) return <div className="text-center text-xl text-gray-400 py-10">Loading...</div>;
+  if (error || !prompt) return <div className="text-center text-xl text-gray-400 py-10">Prompt not found.</div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -44,7 +36,7 @@ const PromptDetailPage = () => {
           <span className="bg-secondary-700 text-secondary-100 text-sm font-semibold px-3 py-1 rounded-full">
             {prompt.category}
           </span>
-          {prompt.tags.map((tag, index) => (
+          {prompt.tags && prompt.tags.map((tag, index) => (
             <span key={index} className="bg-dark-300 text-gray-300 text-xs font-medium px-2.5 py-1 rounded-full">
               #{tag}
             </span>

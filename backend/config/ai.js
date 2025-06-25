@@ -1,9 +1,11 @@
 const OpenAI = require('openai');
 const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize AI clients
 let openai = null;
 let anthropic = null;
+let googleAI = null;
 
 if (process.env.OPENAI_API_KEY) {
   openai = new OpenAI({
@@ -15,6 +17,10 @@ if (process.env.ANTHROPIC_API_KEY) {
   anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY
   });
+}
+
+if (process.env.GOOGLE_AI_API_KEY) {
+  googleAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 }
 
 // AI Provider types

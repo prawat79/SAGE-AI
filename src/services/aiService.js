@@ -10,9 +10,9 @@ class AIService {
   }
 
   // Generate response from AI model
-  async generateResponse(messages, character, context = {}) {
+  async generateResponse(messages, character, context = {}, apiKeyOverride) {
     try {
-      const response = await this.callAI(messages, character, context);
+      const response = await this.callAI(messages, character, context, apiKeyOverride);
       return response;
     } catch (error) {
       console.error('Error generating AI response:', error);
@@ -21,14 +21,14 @@ class AIService {
   }
 
   // Call AI model with streaming support
-  async callAI(messages, character, context) {
+  async callAI(messages, character, context, apiKeyOverride) {
     const formattedMessages = this.prepareMessages(messages, character, context);
-    
+    const apiKey = apiKeyOverride || this.apiKey;
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: this.model,

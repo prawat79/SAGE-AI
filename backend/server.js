@@ -11,9 +11,16 @@ const characterRoutes = require('./routes/characters');
 const conversationRoutes = require('./routes/conversations');
 const chatRoutes = require('./routes/chat');
 const userRoutes = require('./routes/users');
+const { validateAIConfig } = require('./config/ai');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Validate AI Config
+const isAIConfigValid = validateAIConfig();
+if (!isAIConfigValid) {
+  console.warn('Warning: AI services are not fully configured. Some features may not work.');
+}
 
 // Security middleware
 app.use(helmet());

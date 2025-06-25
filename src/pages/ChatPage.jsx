@@ -54,6 +54,7 @@ const ChatPage = () => {
   const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const [userApiKey] = useState(() => localStorage.getItem('userApiKey') || '');
 
   useEffect(() => {
     if (conversationId) {
@@ -133,12 +134,18 @@ const ChatPage = () => {
       };
       setMessages(prev => [...prev, userMessage]);
 
-      // Send message to backend
+      // Send message to backend or AIService
+      // If you want to call AIService directly from frontend:
+      // const aiResponse = await AIService.generateResponse([...messages, userMessage], character, {}, userApiKey);
+      // setMessages(prev => [...prev, { id: Date.now() + 1, content: aiResponse, sender_type: 'ai', created_at: new Date().toISOString() }]);
+
+      // If using backend, send the API key as a custom header
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.access_token}`
+          'Authorization': `Bearer ${user?.access_token}`,
+          'X-OpenAI-Key': userApiKey // Custom header for backend to use
         },
         body: JSON.stringify({
           conversation_id: conversationId,

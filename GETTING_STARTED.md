@@ -1,8 +1,8 @@
-# Getting Started with FlowGPT Clone
+# Getting Started with Sage AI
 
 ## Project Overview
 
-This project is a clone of FlowGPT with improvements, built using modern web technologies. The application features a chat interface with AI, user authentication, prompt templates, and community features.
+Sage AI is an advanced AI character chat platform built using modern web technologies. The application features intelligent AI character interactions, user authentication, multiple AI models, and community features.
 
 ## Prerequisites
 

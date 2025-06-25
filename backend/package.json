@@ -1,7 +1,7 @@
 {
-  "name": "flowgpt-clone-backend",
+  "name": "sage-ai-backend",
   "version": "1.0.0",
-  "description": "Backend for FlowGPT clone with character chat functionality",
+  "description": "Backend for Sage AI - Advanced AI character chat platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

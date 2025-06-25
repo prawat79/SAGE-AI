@@ -1,6 +1,6 @@
-# AI Character Chat Platform
+# Sage AI - Advanced AI Character Chat Platform
 
-A modern web application for creating and chatting with AI characters, similar to FlowGPT, Polybuzz, and Character.ai.
+A cutting-edge web application for creating and chatting with AI characters, featuring multiple AI models and advanced conversation capabilities.
 
 ## Features
 
