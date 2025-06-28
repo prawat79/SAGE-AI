@@ -11,46 +11,75 @@ const AuthCallbackPage = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Handle the OAuth callback
-        const { data, error } = await supabase.auth.getSession();
+        console.log('Handling auth callback...');
+        console.log('Current URL:', window.location.href);
+        console.log('Hash:', window.location.hash);
+        console.log('Search:', window.location.search);
+
+        // First, try to get the current session
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Auth callback error:', error);
-          setError('Authentication failed. Please try again.');
+        if (sessionData.session) {
+          console.log('Session found:', sessionData.session.user.email);
+          setTimeout(() => {
+            navigate('/explore');
+          }, 1000);
+          return;
+        }
+
+        // If no session, check for OAuth callback parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        
+        // Check for error in URL params
+        const errorParam = urlParams.get('error') || hashParams.get('error');
+        if (errorParam) {
+          console.error('OAuth error:', errorParam);
+          setError(`Authentication failed: ${errorParam}`);
           setTimeout(() => navigate('/login'), 3000);
           return;
         }
 
-        if (data.session) {
-          console.log('Authentication successful:', data.session.user.email);
-          // Small delay to ensure auth state is updated
-          setTimeout(() => {
-            navigate('/explore');
-          }, 1000);
-        } else {
-          // Check for hash fragments (OAuth callback)
-          const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          const accessToken = hashParams.get('access_token');
-          const refreshToken = hashParams.get('refresh_token');
+        // Check for access token in hash
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        
+        if (accessToken) {
+          console.log('Access token found, setting session...');
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
           
-          if (accessToken) {
-            // Set the session manually
-            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken
-            });
+          if (error) {
+            console.error('Error setting session:', error);
+            setError('Failed to establish session. Please try again.');
+            setTimeout(() => navigate('/login'), 3000);
+          } else {
+            console.log('Session established successfully:', data.user.email);
+            setTimeout(() => {
+              navigate('/explore');
+            }, 1000);
+          }
+        } else {
+          // Check for authorization code (PKCE flow)
+          const code = urlParams.get('code');
+          if (code) {
+            console.log('Authorization code found, exchanging for session...');
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
             
-            if (sessionError) {
-              console.error('Session error:', sessionError);
-              setError('Failed to establish session. Please try again.');
+            if (error) {
+              console.error('Error exchanging code:', error);
+              setError('Failed to complete authentication. Please try again.');
               setTimeout(() => navigate('/login'), 3000);
             } else {
-              console.log('Session established:', sessionData.user.email);
+              console.log('Code exchange successful:', data.user.email);
               setTimeout(() => {
                 navigate('/explore');
               }, 1000);
             }
           } else {
+            console.log('No authentication data found');
             setError('No authentication data found. Please try signing in again.');
             setTimeout(() => navigate('/login'), 3000);
           }
