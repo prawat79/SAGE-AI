@@ -1,29 +1,59 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { supabase } from '../lib/supabase';
 
 export class CharacterService {
   static async getCharacters(filters = {}) {
     try {
-      const params = new URLSearchParams();
-      
-      if (filters.category && filters.category !== 'all') {
-        params.append('category', filters.category);
-      }
-      
-      if (filters.search) {
-        params.append('search', filters.search);
-      }
-      
-      if (filters.limit) {
-        params.append('limit', filters.limit.toString());
+      // Try to use backend API first if available
+      const apiUrl = import.meta.env.VITE_API_URL;
+      if (apiUrl) {
+        try {
+          const params = new URLSearchParams();
+          if (filters.category && filters.category !== 'all') {
+            params.append('category', filters.category);
+          }
+          if (filters.search) {
+            params.append('search', filters.search);
+          }
+          if (filters.limit) {
+            params.append('limit', filters.limit);
+          }
+
+          const response = await fetch(`${apiUrl}/api/characters?${params.toString()}`);
+          if (response.ok) {
+            const data = await response.json();
+            return { data: data.characters || data.data || [] };
+          }
+        } catch (backendError) {
+          console.warn('Backend API not available, falling back to Supabase:', backendError);
+        }
       }
 
-      const response = await fetch(`${API_BASE_URL}/characters?${params}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Fallback to Supabase
+      let query = supabase
+        .from('characters')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      // Apply filters
+      if (filters.category && filters.category !== 'all') {
+        query = query.eq('category', filters.category);
       }
-      
-      const data = await response.json();
+
+      if (filters.search) {
+        query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      }
+
+      if (filters.limit) {
+        query = query.limit(filters.limit);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Supabase error:', error);
+        return { data: this.getFallbackCharacters() };
+      }
+
       return { data: data || this.getFallbackCharacters() };
     } catch (error) {
       console.error('Error fetching characters:', error);
@@ -33,16 +63,32 @@ export class CharacterService {
 
   static async getCharacterById(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/characters/${id}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          return this.getFallbackCharacters().find(char => char.id === id);
+      // Try backend API first
+      const apiUrl = import.meta.env.VITE_API_URL;
+      if (apiUrl) {
+        try {
+          const response = await fetch(`${apiUrl}/api/characters/${id}`);
+          if (response.ok) {
+            const data = await response.json();
+            return data.character || data.data;
+          }
+        } catch (backendError) {
+          console.warn('Backend API not available, falling back to Supabase:', backendError);
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      const data = await response.json();
+
+      // Fallback to Supabase
+      const { data, error } = await supabase
+        .from('characters')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        return this.getFallbackCharacters().find(char => char.id === id);
+      }
+
       return data;
     } catch (error) {
       console.error('Error fetching character:', error);
@@ -50,26 +96,73 @@ export class CharacterService {
     }
   }
 
-  static async createCharacter(characterData, accessToken) {
+  static async createCharacter(characterData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/characters`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(characterData)
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Try backend API first
+      const apiUrl = import.meta.env.VITE_API_URL;
+      if (apiUrl) {
+        try {
+          const response = await fetch(`${apiUrl}/api/characters`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(characterData)
+          });
+          if (response.ok) {
+            const data = await response.json();
+            return data.character || data.data;
+          }
+        } catch (backendError) {
+          console.warn('Backend API not available, falling back to Supabase:', backendError);
+        }
       }
 
-      const data = await response.json();
+      // Fallback to Supabase
+      const { data, error } = await supabase
+        .from('characters')
+        .insert([{
+          ...characterData,
+          created_at: new Date().toISOString(),
+          chat_count: 0,
+          rating: 4.5
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
       return data;
     } catch (error) {
       console.error('Error creating character:', error);
       throw error;
+    }
+  }
+
+  static async incrementChatCount(characterId) {
+    try {
+      // Try backend API first
+      const apiUrl = import.meta.env.VITE_API_URL;
+      if (apiUrl) {
+        try {
+          await fetch(`${apiUrl}/api/characters/${characterId}/increment-chat`, {
+            method: 'POST'
+          });
+          return;
+        } catch (backendError) {
+          console.warn('Backend API not available, falling back to Supabase:', backendError);
+        }
+      }
+
+      // Fallback to Supabase
+      const { error } = await supabase.rpc('increment_chat_count', {
+        character_id: characterId
+      });
+
+      if (error) {
+        console.error('Error incrementing chat count:', error);
+      }
+    } catch (error) {
+      console.error('Error incrementing chat count:', error);
     }
   }
 
