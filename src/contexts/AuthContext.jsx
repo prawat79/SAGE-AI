@@ -17,6 +17,7 @@ export function AuthProvider({ children }) {
     const getInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session:', session?.user?.email);
         setUser(session?.user ?? null);
         setIsAuthenticated(!!session?.user);
       } catch (error) {

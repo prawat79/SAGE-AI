@@ -63,9 +63,16 @@ const SignupPage = () => {
     try {
       setError('');
       setLoading(true);
-      await signInWithGoogle();
-      // Note: OAuth redirect will handle navigation
+      const { data, error } = await signInWithGoogle();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // OAuth will redirect automatically, no need to navigate manually
+      console.log('Google OAuth initiated successfully');
     } catch (error) {
+      console.error('Google sign in error:', error);
       setError(error.message || 'Failed to sign in with Google');
       setLoading(false);
     }
@@ -75,9 +82,16 @@ const SignupPage = () => {
     try {
       setError('');
       setLoading(true);
-      await signInWithGithub();
-      // Note: OAuth redirect will handle navigation
+      const { data, error } = await signInWithGithub();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // OAuth will redirect automatically, no need to navigate manually
+      console.log('GitHub OAuth initiated successfully');
     } catch (error) {
+      console.error('GitHub sign in error:', error);
       setError(error.message || 'Failed to sign in with GitHub');
       setLoading(false);
     }
