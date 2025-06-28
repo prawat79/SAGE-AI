@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, Github } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Github, Sparkles, Zap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage = () => {
@@ -14,7 +14,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const from = location.state?.from?.pathname || '/';
+  const from = location.state?.from?.pathname || '/explore';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,9 +28,9 @@ const LoginPage = () => {
       setError('');
       setLoading(true);
       await signIn(email, password);
-      navigate('/explore');
+      navigate(from);
     } catch (error) {
-      setError('Failed to sign in');
+      setError(error.message || 'Failed to sign in');
     } finally {
       setLoading(false);
     }
@@ -41,10 +41,9 @@ const LoginPage = () => {
       setError('');
       setLoading(true);
       await signInWithGoogle();
-      navigate('/explore');
+      // Note: OAuth redirect will handle navigation
     } catch (error) {
       setError(error.message || 'Failed to sign in with Google');
-    } finally {
       setLoading(false);
     }
   };
@@ -54,48 +53,49 @@ const LoginPage = () => {
       setError('');
       setLoading(true);
       await signInWithGithub();
-      navigate('/explore');
+      // Note: OAuth redirect will handle navigation
     } catch (error) {
       setError(error.message || 'Failed to sign in with GitHub');
-    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="mx-auto h-12 w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">F</span>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Background Effects */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="relative max-w-md w-full space-y-8">
+        {/* Header */}
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-glow">
+            <Sparkles className="h-8 w-8 text-white" />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+          <h2 className="text-4xl font-bold text-white mb-2">
+            Welcome Back
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link
-              to="/signup"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              create a new account
-            </Link>
+          <p className="text-gray-400">
+            Sign in to continue your AI journey
           </p>
         </div>
         
-        <div className="bg-white py-8 px-6 shadow-lg rounded-lg">
+        {/* Form */}
+        <div className="glass rounded-2xl p-8 animate-fade-in">
           {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm">
               {error}
             </div>
           )}
           
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                 Email address
               </label>
-              <div className="mt-1 relative">
+              <div className="relative">
                 <input
                   id="email"
                   name="email"
@@ -104,18 +104,18 @@ const LoginPage = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="w-full input-glass rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-400 focus-ring"
                   placeholder="Enter your email"
                 />
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                 Password
               </label>
-              <div className="mt-1 relative">
+              <div className="relative">
                 <input
                   id="password"
                   name="password"
@@ -124,13 +124,13 @@ const LoginPage = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="w-full input-glass rounded-xl py-3 pl-12 pr-12 text-white placeholder-gray-400 focus-ring"
                   placeholder="Enter your password"
                 />
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -144,9 +144,9 @@ const LoginPage = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-600 rounded bg-gray-700"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
                   Remember me
                 </label>
               </div>
@@ -154,39 +154,46 @@ const LoginPage = () => {
               <div className="text-sm">
                 <Link
                   to="/forgot-password"
-                  className="font-medium text-blue-600 hover:text-blue-500"
+                  className="font-medium text-purple-400 hover:text-purple-300 transition-colors"
                 >
-                  Forgot your password?
+                  Forgot password?
                 </Link>
               </div>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full btn-primary py-3 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              {loading ? (
+                <div className="w-5 h-5 spinner"></div>
+              ) : (
+                <>
+                  <Zap className="h-5 w-5" />
+                  <span>Sign In</span>
+                </>
+              )}
+            </button>
           </form>
           
-          <div className="mt-6">
+          {/* Divider */}
+          <div className="mt-8">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-white/10" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-4 bg-gray-900/50 text-gray-400">Or continue with</span>
               </div>
             </div>
 
+            {/* OAuth Buttons */}
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-secondary py-3 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path
@@ -206,18 +213,31 @@ const LoginPage = () => {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                <span className="ml-2">Google</span>
+                <span>Google</span>
               </button>
 
               <button
                 onClick={handleGithubSignIn}
                 disabled={loading}
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-secondary py-3 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 <Github className="h-5 w-5" />
-                <span className="ml-2">GitHub</span>
+                <span>GitHub</span>
               </button>
             </div>
+          </div>
+
+          {/* Sign Up Link */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-400">
+              Don't have an account?{' '}
+              <Link
+                to="/signup"
+                className="font-medium text-purple-400 hover:text-purple-300 transition-colors"
+              >
+                Sign up for free
+              </Link>
+            </p>
           </div>
         </div>
       </div>
