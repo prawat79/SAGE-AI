@@ -1,8 +1,11 @@
 export class AIService {
   static async generateResponse(messages, character, context = {}, apiKey) {
     try {
-      if (!apiKey) {
-        throw new Error('API key is required');
+      // Use provided API key or fallback to environment variable
+      const geminiApiKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY;
+      
+      if (!geminiApiKey) {
+        throw new Error('Gemini API key is required');
       }
 
       const systemPrompt = this.createSystemPrompt(character);
@@ -10,7 +13,7 @@ export class AIService {
       // Format messages for Gemini API
       const formattedMessages = this.formatMessagesForGemini(messages, systemPrompt);
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
