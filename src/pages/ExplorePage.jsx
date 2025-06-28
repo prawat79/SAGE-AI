@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Grid, List, Star, MessageCircle, Calendar, User } from 'lucide-react';
+import { Search, Filter, Grid, List, Star, MessageCircle, Calendar, User, TrendingUp, Sparkles, Heart, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { CharacterService } from '../services/characterService';
 import ConversationService from '../services/conversationService';
 
 const CharacterCard = ({ character, onStartChat }) => {
   const navigate = useNavigate();
+  const [isLiked, setIsLiked] = useState(false);
 
   const handleViewDetails = () => {
     navigate(`/character/${character.id}`);
@@ -19,87 +20,103 @@ const CharacterCard = ({ character, onStartChat }) => {
     }
   };
 
+  const handleLike = (e) => {
+    e.stopPropagation();
+    setIsLiked(!isLiked);
+  };
+
   return (
     <div 
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer"
+      className="card p-6 hover-lift group cursor-pointer animate-fade-in"
       onClick={handleViewDetails}
     >
-      <div className="p-6">
-        <div className="flex items-start space-x-4 mb-4">
-          <div className="flex-shrink-0">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start space-x-4">
+          <div className="relative">
             <img
               src={character.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${character.name}`}
               alt={character.name}
-              className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+              className="w-16 h-16 rounded-full border-2 border-purple-500/30 group-hover:border-purple-500/60 transition-colors"
             />
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-gray-900"></div>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2">
-              <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-100 rounded-full">
-                {character.category}
-              </span>
-              <div className="flex items-center space-x-2">
-                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                <span className="text-sm text-gray-600">{character.rating || 4.5}</span>
-              </div>
-            </div>
-            
-            <h3 className="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors group-hover:text-blue-600">
+          
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-white mb-1 group-hover:gradient-text transition-all">
               {character.name}
             </h3>
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="text-xs px-2 py-1 bg-purple-500/20 text-purple-300 rounded-full">
+                {character.category}
+              </span>
+              <div className="flex items-center space-x-1">
+                <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                <span className="text-xs text-gray-400">{character.rating || 4.5}</span>
+              </div>
+            </div>
           </div>
         </div>
         
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-          {character.description}
-        </p>
-        
-        {character.personality && (
-          <p className="text-gray-500 text-xs mb-4 italic">
-            Personality: {character.personality}
-          </p>
-        )}
-        
-        {character.tags && character.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {character.tags.slice(0, 3).map((tag, index) => (
-              <span 
-                key={index}
-                className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md"
-              >
-                #{tag}
-              </span>
-            ))}
-            {character.tags.length > 3 && (
-              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md">
-                +{character.tags.length - 3} more
-              </span>
-            )}
-          </div>
-        )}
-        
         <button
-          onClick={handleStartChat}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+          onClick={handleLike}
+          className={`p-2 rounded-full transition-colors ${
+            isLiked 
+              ? 'text-red-400 bg-red-500/20' 
+              : 'text-gray-400 hover:text-red-400 hover:bg-red-500/10'
+          }`}
         >
-          Start Chat
+          <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
         </button>
       </div>
       
-      <div className="px-6 py-4 bg-gray-50 border-t">
-        <div className="flex items-center justify-between text-sm text-gray-500">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4" />
-              <span>{new Date(character.created_at).toLocaleDateString()}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <MessageCircle className="h-4 w-4" />
-              <span>{character.chat_count || 0} chats</span>
-            </div>
+      {/* Description */}
+      <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+        {character.description}
+      </p>
+      
+      {/* Tags */}
+      {character.tags && character.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {character.tags.slice(0, 3).map((tag, index) => (
+            <span 
+              key={index}
+              className="px-2 py-1 text-xs bg-gray-700/50 text-gray-300 rounded-md"
+            >
+              #{tag}
+            </span>
+          ))}
+          {character.tags.length > 3 && (
+            <span className="px-2 py-1 text-xs bg-gray-700/50 text-gray-300 rounded-md">
+              +{character.tags.length - 3}
+            </span>
+          )}
+        </div>
+      )}
+      
+      {/* Stats */}
+      <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1">
+            <MessageCircle className="h-3 w-3" />
+            <span>{(character.chat_count || 0).toLocaleString()}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Eye className="h-3 w-3" />
+            <span>{Math.floor(Math.random() * 5000) + 1000}</span>
           </div>
         </div>
+        <span>{new Date(character.created_at).toLocaleDateString()}</span>
       </div>
+      
+      {/* Action Button */}
+      <button
+        onClick={handleStartChat}
+        className="w-full btn-primary py-3 rounded-xl font-semibold flex items-center justify-center space-x-2"
+      >
+        <MessageCircle className="h-4 w-4" />
+        <span>Start Chat</span>
+      </button>
     </div>
   );
 };
@@ -150,7 +167,6 @@ const ExplorePage = () => {
     }
 
     try {
-      // Create a new conversation
       const conversation = await ConversationService.createConversation(
         user.id,
         character.id,
@@ -158,7 +174,6 @@ const ExplorePage = () => {
         user.access_token
       );
       
-      // Navigate to chat page
       navigate(`/chat/${conversation.id}`);
     } catch (error) {
       console.error('Error starting chat:', error);
@@ -176,120 +191,173 @@ const ExplorePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 pt-20">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Explore AI Characters
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Discover and chat with thousands of AI characters. From anime heroes to historical figures,
-              find the perfect conversation partner.
-            </p>
+      <div className="relative py-16 overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center space-x-2 glass rounded-full px-4 py-2 mb-6">
+            <Sparkles className="h-4 w-4 text-purple-400" />
+            <span className="text-sm text-gray-300">Discover AI Characters</span>
           </div>
+          
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            Explore
+            <span className="gradient-text"> AI Characters</span>
+          </h1>
+          
+          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+            Discover thousands of unique AI characters with distinct personalities, 
+            backgrounds, and conversation styles. Find your perfect chat companion.
+          </p>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="glass rounded-2xl p-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="text"
-                  placeholder="Search characters..."
+                  placeholder="Search characters by name, description, or tags..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full input-glass rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-400 focus-ring"
                 />
               </div>
             </div>
             
-            {/* Category Filter */}
-            <div className="lg:w-48">
+            {/* Filters */}
+            <div className="flex flex-wrap gap-4">
               <select
                 value={filters.category}
                 onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input-glass rounded-xl px-4 py-4 text-white focus-ring"
               >
                 {categories.map((category) => (
-                  <option key={category.value} value={category.value}>
+                  <option key={category.value} value={category.value} className="bg-gray-800">
                     {category.label}
                   </option>
                 ))}
               </select>
+              
+              <div className="flex border border-white/10 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-4 transition-colors ${
+                    viewMode === 'grid' 
+                      ? 'bg-purple-500 text-white' 
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Grid className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-4 transition-colors ${
+                    viewMode === 'list' 
+                      ? 'bg-purple-500 text-white' 
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <List className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
           
-          {/* View Mode Toggle */}
-          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+          {/* Results Count */}
+          <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/10">
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
+              <span className="text-gray-400">
                 {characters.length} characters found
               </span>
+              {filters.search && (
+                <span className="text-sm text-purple-400">
+                  for "{filters.search}"
+                </span>
+              )}
             </div>
+            
             <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md ${
-                  viewMode === 'grid'
-                    ? 'bg-blue-100 text-blue-600'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                <Grid className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md ${
-                  viewMode === 'list'
-                    ? 'bg-blue-100 text-blue-600'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                <List className="h-5 w-5" />
-              </button>
+              <TrendingUp className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-400">Trending</span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Characters Grid */}
+      {/* Characters Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-600 mb-4">{error}</p>
-            <button
-              onClick={fetchCharacters}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : characters.length === 0 ? (
-          <div className="text-center py-12">
-            <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No characters found</h3>
-            <p className="text-gray-600">Try adjusting your search or filters.</p>
-          </div>
-        ) : (
           <div className={`grid gap-6 ${
             viewMode === 'grid'
               ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
               : 'grid-cols-1'
           }`}>
-            {characters.map((character) => (
+            {[...Array(12)].map((_, index) => (
+              <div key={index} className="card p-6 animate-pulse">
+                <div className="flex items-start space-x-4 mb-4">
+                  <div className="w-16 h-16 bg-gray-700 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="h-5 bg-gray-700 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-700 rounded w-20"></div>
+                  </div>
+                </div>
+                <div className="h-4 bg-gray-700 rounded mb-2"></div>
+                <div className="h-4 bg-gray-700 rounded mb-4 w-3/4"></div>
+                <div className="h-10 bg-gray-700 rounded"></div>
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <User className="h-8 w-8 text-red-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-2">Something went wrong</h3>
+            <p className="text-gray-400 mb-6">{error}</p>
+            <button
+              onClick={fetchCharacters}
+              className="btn-primary px-6 py-3 rounded-xl font-semibold"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : characters.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-2">No characters found</h3>
+            <p className="text-gray-400 mb-6">Try adjusting your search or filters.</p>
+            <button
+              onClick={() => setFilters({ search: '', category: '', sortBy: 'created_at', sortOrder: 'desc' })}
+              className="btn-secondary px-6 py-3 rounded-xl font-semibold"
+            >
+              Clear Filters
+            </button>
+          </div>
+        ) : (
+          <div className={`grid gap-6 ${
+            viewMode === 'grid'
+              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              : 'grid-cols-1 max-w-4xl mx-auto'
+          }`}>
+            {characters.map((character, index) => (
               <CharacterCard
                 key={character.id}
                 character={character}
                 onStartChat={handleStartChat}
+                style={{ animationDelay: `${index * 0.05}s` }}
               />
             ))}
           </div>
