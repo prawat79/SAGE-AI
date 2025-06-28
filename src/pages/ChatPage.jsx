@@ -81,7 +81,7 @@ const ChatPage = () => {
       setLoading(true);
       
       // Load conversation details
-      const conversationData = await ConversationService.getConversation(conversationId);
+      const conversationData = await ConversationService.getConversation(conversationId, user?.access_token);
       if (conversationData) {
         setConversation(conversationData);
         
@@ -90,7 +90,7 @@ const ChatPage = () => {
         setCharacter(characterData);
         
         // Load messages
-        const messagesData = await ConversationService.getMessages(conversationId);
+        const messagesData = await ConversationService.getMessages(conversationId, user?.access_token);
         setMessages(messagesData || []);
       } else {
         setError('Conversation not found');
@@ -130,7 +130,8 @@ const ChatPage = () => {
       const savedUserMessage = await ConversationService.saveMessage(
         conversationId,
         messageContent,
-        'user'
+        'user',
+        user?.access_token
       );
 
       // Generate AI response
@@ -145,7 +146,8 @@ const ChatPage = () => {
       const savedAiMessage = await ConversationService.saveMessage(
         conversationId,
         aiResponse,
-        'ai'
+        'ai',
+        user?.access_token
       );
 
       // Update messages with saved versions
@@ -153,9 +155,6 @@ const ChatPage = () => {
         const filtered = prev.filter(msg => msg.id !== userMessage.id);
         return [...filtered, savedUserMessage, savedAiMessage];
       });
-
-      // Update conversation timestamp
-      await ConversationService.updateConversationTimestamp(conversationId);
     } catch (err) {
       console.error('Error sending message:', err);
       // Remove the temporary message on error
@@ -184,7 +183,7 @@ const ChatPage = () => {
     if (!window.confirm('Are you sure you want to clear this conversation?')) return;
     
     try {
-      await ConversationService.clearConversation(conversationId);
+      await ConversationService.clearConversation(conversationId, user?.access_token);
       setMessages([]);
       setShowMenu(false);
     } catch (err) {
@@ -196,7 +195,7 @@ const ChatPage = () => {
     if (!window.confirm('Are you sure you want to delete this conversation?')) return;
     
     try {
-      await ConversationService.deleteConversation(conversationId);
+      await ConversationService.deleteConversation(conversationId, user?.access_token);
       navigate('/explore');
     } catch (err) {
       console.error('Error deleting conversation:', err);

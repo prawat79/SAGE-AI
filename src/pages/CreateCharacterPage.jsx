@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import characterService from '../services/characterService';
+import { CharacterService } from '../services/characterService';
 import { Upload, Save, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 const CreateCharacterPage = () => {
@@ -78,7 +78,7 @@ const CreateCharacterPage = () => {
         created_by: user.id
       };
       
-      const newCharacter = await characterService.createCharacter(characterData);
+      const newCharacter = await CharacterService.createCharacter(characterData, user.access_token);
       navigate(`/character/${newCharacter.id}`);
     } catch (error) {
       console.error('Error creating character:', error);

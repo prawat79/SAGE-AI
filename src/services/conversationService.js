@@ -1,31 +1,27 @@
-import { supabase } from '../lib/supabase';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export class ConversationService {
-  static async createConversation(userId, characterId, title = null) {
+  static async createConversation(userId, characterId, title = null, accessToken) {
     try {
       const conversationData = {
-        user_id: userId,
         character_id: characterId,
-        title: title || `Chat with Character`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        title: title || `Chat with Character`
       };
 
-      const { data, error } = await supabase
-        .from('conversations')
-        .insert([conversationData])
-        .select()
-        .single();
+      const response = await fetch(`${API_BASE_URL}/conversations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(conversationData)
+      });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        // Return a temporary conversation for demo purposes
-        return {
-          id: `temp_${Date.now()}`,
-          ...conversationData
-        };
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      const data = await response.json();
       return data;
     } catch (error) {
       console.error('Error creating conversation:', error);
@@ -41,19 +37,22 @@ export class ConversationService {
     }
   }
 
-  static async getConversation(id) {
+  static async getConversation(id, accessToken) {
     try {
-      const { data, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const response = await fetch(`${API_BASE_URL}/conversations/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        return null;
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      const data = await response.json();
       return data;
     } catch (error) {
       console.error('Error getting conversation:', error);
@@ -61,22 +60,19 @@ export class ConversationService {
     }
   }
 
-  static async getUserConversations(userId) {
+  static async getUserConversations(userId, accessToken) {
     try {
-      const { data, error } = await supabase
-        .from('conversations')
-        .select(`
-          *,
-          characters(id, name, avatar_url)
-        `)
-        .eq('user_id', userId)
-        .order('updated_at', { ascending: false });
+      const response = await fetch(`${API_BASE_URL}/conversations`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        return [];
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      const data = await response.json();
       return data || [];
     } catch (error) {
       console.error('Error getting user conversations:', error);
@@ -84,19 +80,19 @@ export class ConversationService {
     }
   }
 
-  static async getMessages(conversationId) {
+  static async getMessages(conversationId, accessToken) {
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        return [];
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      const data = await response.json();
       return data || [];
     } catch (error) {
       console.error('Error getting messages:', error);
@@ -104,30 +100,27 @@ export class ConversationService {
     }
   }
 
-  static async saveMessage(conversationId, content, senderType) {
+  static async saveMessage(conversationId, content, senderType, accessToken) {
     try {
       const messageData = {
-        conversation_id: conversationId,
         content,
-        sender_type: senderType,
-        created_at: new Date().toISOString()
+        sender_type: senderType
       };
 
-      const { data, error } = await supabase
-        .from('messages')
-        .insert([messageData])
-        .select()
-        .single();
+      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(messageData)
+      });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        // Return a temporary message for demo purposes
-        return {
-          id: `temp_${Date.now()}`,
-          ...messageData
-        };
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      const data = await response.json();
       return data;
     } catch (error) {
       console.error('Error saving message:', error);
@@ -142,38 +135,35 @@ export class ConversationService {
     }
   }
 
-  static async updateConversationTimestamp(conversationId) {
+  static async clearConversation(conversationId, accessToken) {
     try {
-      const { error } = await supabase
-        .from('conversations')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', conversationId);
+      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
 
-      if (error) {
-        console.error('Supabase error:', error);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
-      console.error('Error updating conversation timestamp:', error);
+      console.error('Error clearing conversation:', error);
+      throw error;
     }
   }
 
-  static async deleteConversation(conversationId) {
+  static async deleteConversation(conversationId, accessToken) {
     try {
-      // First delete all messages
-      await supabase
-        .from('messages')
-        .delete()
-        .eq('conversation_id', conversationId);
+      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
 
-      // Then delete the conversation
-      const { error } = await supabase
-        .from('conversations')
-        .delete()
-        .eq('id', conversationId);
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
       console.error('Error deleting conversation:', error);

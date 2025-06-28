@@ -154,7 +154,8 @@ const ExplorePage = () => {
       const conversation = await ConversationService.createConversation(
         user.id,
         character.id,
-        `Chat with ${character.name}`
+        `Chat with ${character.name}`,
+        user.access_token
       );
       
       // Navigate to chat page

@@ -1,33 +1,29 @@
-import { supabase } from '../lib/supabase';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export class CharacterService {
   static async getCharacters(filters = {}) {
     try {
-      let query = supabase
-        .from('characters')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      // Apply filters
+      const params = new URLSearchParams();
+      
       if (filters.category && filters.category !== 'all') {
-        query = query.eq('category', filters.category);
+        params.append('category', filters.category);
       }
-
+      
       if (filters.search) {
-        query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+        params.append('search', filters.search);
       }
-
+      
       if (filters.limit) {
-        query = query.limit(filters.limit);
+        params.append('limit', filters.limit.toString());
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Supabase error:', error);
-        return { data: this.getFallbackCharacters() };
+      const response = await fetch(`${API_BASE_URL}/characters?${params}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+      
+      const data = await response.json();
       return { data: data || this.getFallbackCharacters() };
     } catch (error) {
       console.error('Error fetching characters:', error);
@@ -37,17 +33,16 @@ export class CharacterService {
 
   static async getCharacterById(id) {
     try {
-      const { data, error } = await supabase
-        .from('characters')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error('Supabase error:', error);
-        return this.getFallbackCharacters().find(char => char.id === id);
+      const response = await fetch(`${API_BASE_URL}/characters/${id}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          return this.getFallbackCharacters().find(char => char.id === id);
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+      
+      const data = await response.json();
       return data;
     } catch (error) {
       console.error('Error fetching character:', error);
@@ -55,38 +50,26 @@ export class CharacterService {
     }
   }
 
-  static async createCharacter(characterData) {
+  static async createCharacter(characterData, accessToken) {
     try {
-      const { data, error } = await supabase
-        .from('characters')
-        .insert([{
-          ...characterData,
-          created_at: new Date().toISOString(),
-          chat_count: 0,
-          rating: 4.5
-        }])
-        .select()
-        .single();
+      const response = await fetch(`${API_BASE_URL}/characters`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(characterData)
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       return data;
     } catch (error) {
       console.error('Error creating character:', error);
       throw error;
-    }
-  }
-
-  static async incrementChatCount(characterId) {
-    try {
-      const { error } = await supabase.rpc('increment_chat_count', {
-        character_id: characterId
-      });
-
-      if (error) {
-        console.error('Error incrementing chat count:', error);
-      }
-    } catch (error) {
-      console.error('Error incrementing chat count:', error);
     }
   }
 

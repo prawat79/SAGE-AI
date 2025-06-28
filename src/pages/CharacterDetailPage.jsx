@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import characterService from '../services/characterService';
-import conversationService from '../services/conversationService';
+import { CharacterService } from '../services/characterService';
+import ConversationService from '../services/conversationService';
 import { MessageCircle, Heart, Share2, Star, Users, Calendar, Tag } from 'lucide-react';
 
 const CharacterDetailPage = () => {
@@ -19,7 +19,7 @@ const CharacterDetailPage = () => {
     const fetchCharacter = async () => {
       try {
         setLoading(true);
-        const characterData = await characterService.getCharacterById(id);
+        const characterData = await CharacterService.getCharacterById(id);
         if (characterData) {
           setCharacter(characterData);
         } else {
@@ -48,13 +48,12 @@ const CharacterDetailPage = () => {
       setIsStartingChat(true);
       
       // Create new conversation
-      const conversation = await conversationService.createConversation(
+      const conversation = await ConversationService.createConversation(
         user.id,
-        character.id
+        character.id,
+        `Chat with ${character.name}`,
+        user.access_token
       );
-      
-      // Increment chat count
-      await characterService.incrementChatCount(character.id);
       
       // Navigate to chat page
       navigate(`/chat/${conversation.id}`);
