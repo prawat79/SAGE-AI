@@ -76,9 +76,9 @@ const PromptStorePage = () => {
 
   // Supported model providers
   const modelProviders = [
+    { id: 'gemini', name: 'Google Gemini' },
     { id: 'openai', name: 'OpenAI (ChatGPT, GPT-4, etc.)' },
     { id: 'anthropic', name: 'Anthropic – Claude' },
-    { id: 'gemini', name: 'Google Gemini' },
     { id: 'grok', name: 'xAI Grok' },
     { id: 'qwen', name: 'Alibaba Qwen' }
   ];
@@ -116,13 +116,13 @@ const PromptStorePage = () => {
   };
 
   // Provider state
-  const [selectedProvider, setSelectedProvider] = useState(() => localStorage.getItem('userProvider') || 'openai');
+  const [selectedProvider, setSelectedProvider] = useState(() => localStorage.getItem('userProvider') || 'gemini');
 
   // Handler for opening the API key modal
   const openApiKeyModal = () => {
     setApiKeyInput(userApiKey || '');
     setApiKeyError('');
-    setSelectedProvider(localStorage.getItem('userProvider') || 'openai');
+    setSelectedProvider(localStorage.getItem('userProvider') || 'gemini');
     setShowApiKeyModal(true);
   };
 
@@ -144,7 +144,7 @@ const PromptStorePage = () => {
     setApiKeyInput('');
     setShowApiKeyModal(false);
     setApiKeyError('');
-    setSelectedProvider('openai');
+    setSelectedProvider('gemini');
   };
 
   // Handler for Try Prompt button
@@ -287,7 +287,7 @@ const PromptStorePage = () => {
               <input
                 type={showApiKey ? 'text' : 'password'}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder={selectedProvider === 'openai' ? 'sk-...' : 'Enter your API key'}
+                placeholder={selectedProvider === 'gemini' ? 'AIza...' : selectedProvider === 'openai' ? 'sk-...' : 'Enter your API key'}
                 value={apiKeyInput}
                 onChange={e => setApiKeyInput(e.target.value)}
                 autoFocus
@@ -304,7 +304,7 @@ const PromptStorePage = () => {
             {userApiKey && (
               <div className="mb-3 text-xs text-gray-500">
                 <span className="font-semibold">Current key:</span> <span className="font-mono">{'*'.repeat(userApiKey.length > 6 ? 6 : userApiKey.length)}{userApiKey.length > 6 ? '...' : ''}</span>
-                <span className="ml-2">({modelProviders.find(p => p.id === (localStorage.getItem('userProvider') || 'openai'))?.name})</span>
+                <span className="ml-2">({modelProviders.find(p => p.id === (localStorage.getItem('userProvider') || 'gemini'))?.name})</span>
               </div>
             )}
             <button
@@ -324,7 +324,10 @@ const PromptStorePage = () => {
             )}
             <p className="text-xs text-gray-500 mt-3">
               Your API key is stored only in your browser and never sent to our server.<br/>
-              Select your provider and enter the correct key for that service.
+              Get your Gemini API key from{' '}
+              <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                Google AI Studio
+              </a>
             </p>
           </div>
         </div>

@@ -6,25 +6,41 @@ export class AIService {
       }
 
       const systemPrompt = this.createSystemPrompt(character);
-      const formattedMessages = [
-        { role: 'system', content: systemPrompt },
-        ...messages.map(msg => ({
-          role: msg.sender_type === 'user' ? 'user' : 'assistant',
-          content: msg.content
-        }))
-      ];
+      
+      // Format messages for Gemini API
+      const formattedMessages = this.formatMessagesForGemini(messages, systemPrompt);
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: formattedMessages,
-          max_tokens: 1000,
-          temperature: 0.8
+          contents: formattedMessages,
+          generationConfig: {
+            temperature: 0.8,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1000,
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
         })
       });
 
@@ -34,11 +50,49 @@ export class AIService {
       }
 
       const data = await response.json();
-      return data.choices[0].message.content;
+      
+      if (!data.candidates || data.candidates.length === 0) {
+        throw new Error('No response generated');
+      }
+
+      const candidate = data.candidates[0];
+      
+      if (candidate.finishReason === 'SAFETY') {
+        return "I apologize, but I can't respond to that request due to safety guidelines. Let's talk about something else!";
+      }
+
+      return candidate.content?.parts?.[0]?.text || this.getFallbackResponse(character);
     } catch (error) {
       console.error('AI Service error:', error);
       return this.getFallbackResponse(character);
     }
+  }
+
+  static formatMessagesForGemini(messages, systemPrompt) {
+    const contents = [];
+    
+    // Add system prompt as the first user message
+    contents.push({
+      role: 'user',
+      parts: [{ text: systemPrompt }]
+    });
+    
+    // Add a model response acknowledging the system prompt
+    contents.push({
+      role: 'model',
+      parts: [{ text: 'I understand. I will roleplay as this character and respond accordingly.' }]
+    });
+
+    // Add conversation messages
+    messages.forEach(msg => {
+      const role = msg.sender_type === 'user' ? 'user' : 'model';
+      contents.push({
+        role: role,
+        parts: [{ text: msg.content }]
+      });
+    });
+
+    return contents;
   }
 
   static createSystemPrompt(character) {
@@ -46,7 +100,15 @@ export class AIService {
 
 Personality: ${character.personality}
 
-Please respond in character, maintaining your personality and speaking style. Keep responses conversational and engaging, typically 1-3 sentences unless the user asks for something longer.`;
+Important instructions:
+- Stay in character as ${character.name} at all times
+- Respond naturally and conversationally
+- Keep responses engaging but not too long (1-3 sentences unless asked for more)
+- Show your personality through your words and tone
+- Be helpful and respectful while maintaining your character
+- If asked about topics outside your character knowledge, respond as your character would
+
+Please respond in character to the following conversation.`;
   }
 
   static getFallbackResponse(character) {

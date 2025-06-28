@@ -309,7 +309,7 @@ const ChatPage = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Key className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Enter Your OpenAI API Key</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">Enter Your Gemini API Key</h2>
               <p className="text-gray-400 text-sm">
                 Your API key is stored locally and never sent to our servers.
               </p>
@@ -318,7 +318,7 @@ const ChatPage = () => {
             <input
               type="password"
               className="w-full input-glass rounded-xl px-4 py-4 mb-6 text-white placeholder-gray-400 focus-ring"
-              placeholder="sk-..."
+              placeholder="AIza..."
               value={apiKeyInput}
               onChange={(e) => setApiKeyInput(e.target.value)}
               autoFocus
@@ -343,12 +343,12 @@ const ChatPage = () => {
             <p className="text-xs text-gray-500 mt-4 text-center">
               Get your API key from{' '}
               <a 
-                href="https://platform.openai.com/api-keys" 
+                href="https://makersuite.google.com/app/apikey" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="text-purple-400 hover:text-purple-300"
               >
-                OpenAI Platform
+                Google AI Studio
               </a>
             </p>
           </div>
@@ -501,7 +501,7 @@ const ChatPage = () => {
                 onClick={() => setShowApiKeyModal(true)}
                 className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
               >
-                Enter your OpenAI API key to start chatting
+                Enter your Gemini API key to start chatting
               </button>
             </div>
           )}
