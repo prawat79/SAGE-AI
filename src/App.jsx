@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/layout/Navbar';
 import HomePage from './pages/HomePage';
-import ExplorePage from './pages/ExplorePage';
 import ChatPage from './pages/ChatPage';
 import CharacterDetailPage from './pages/CharacterDetailPage';
 import CreateCharacterPage from './pages/CreateCharacterPage';
@@ -13,6 +12,8 @@ import SignupPage from './pages/SignupPage';
 import PromptStorePage from './pages/PromptStorePage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 
+const ExplorePage = React.lazy(() => import('./pages/ExplorePage'));
+
 function App() {
   return (
     <AuthProvider>
@@ -21,7 +22,11 @@ function App() {
         <main>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/explore" element={
+              <Suspense fallback={<div className="p-8 text-center">Loading Explore...</div>}>
+                <ExplorePage />
+              </Suspense>
+            } />
             <Route path="/prompts" element={<PromptStorePage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/chat/:conversationId" element={<ChatPage />} />

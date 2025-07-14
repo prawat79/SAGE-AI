@@ -1,0 +1,47 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Sage AI Backend API",
+    "version": "1.0.0",
+    "description": "API documentation for Sage AI character chat platform."
+  },
+  "servers": [
+    { "url": "http://localhost:5000/api" }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register new user",
+        "requestBody": { "required": true },
+        "responses": { "200": { "description": "Success" } }
+      }
+    },
+    "/auth/login": {
+      "post": { "summary": "Login user", "responses": { "200": { "description": "Success" } } }
+    },
+    "/characters": {
+      "get": { "summary": "List characters", "responses": { "200": { "description": "Success" } } },
+      "post": { "summary": "Create character", "responses": { "201": { "description": "Created" } } }
+    },
+    "/characters/{id}": {
+      "get": { "summary": "Get character", "responses": { "200": { "description": "Success" } } },
+      "put": { "summary": "Update character", "responses": { "200": { "description": "Success" } } },
+      "delete": { "summary": "Delete character", "responses": { "200": { "description": "Deleted" } } }
+    },
+    "/conversations": {
+      "get": { "summary": "List conversations", "responses": { "200": { "description": "Success" } } },
+      "post": { "summary": "Create conversation", "responses": { "201": { "description": "Created" } } }
+    },
+    "/conversations/{id}": {
+      "get": { "summary": "Get conversation", "responses": { "200": { "description": "Success" } } },
+      "delete": { "summary": "Delete conversation", "responses": { "200": { "description": "Deleted" } } }
+    },
+    "/conversations/{id}/messages": {
+      "get": { "summary": "List messages", "responses": { "200": { "description": "Success" } } },
+      "post": { "summary": "Send message", "responses": { "201": { "description": "Created" } } }
+    },
+    "/messages/{id}": {
+      "delete": { "summary": "Delete message", "responses": { "200": { "description": "Deleted" } } }
+    }
+  }
+}

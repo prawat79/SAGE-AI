@@ -12,6 +12,10 @@ const conversationRoutes = require('./routes/conversations');
 const chatRoutes = require('./routes/chat');
 const userRoutes = require('./routes/users');
 const { validateAIConfig } = require('./config/ai');
+const requestId = require('./middleware/requestId');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -53,6 +57,7 @@ const chatLimiter = rateLimit({
 
 app.use(limiter);
 app.use('/api/chat', chatLimiter);
+app.use(requestId);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -81,27 +86,13 @@ app.use('/api/characters', characterRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    message: `Cannot ${req.method} ${req.originalUrl}`
-  });
-});
+app.use(notFoundHandler);
 
 // Global error handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  
-  // Don't leak error details in production
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error',
-    ...(isDevelopment && { stack: err.stack })
-  });
-});
+app.use(errorHandler);
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
