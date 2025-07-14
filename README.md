@@ -58,26 +58,25 @@ cd ..
 
 3. Create a `.env` file in the root directory:
 ```env
-# API Keys
-REACT_APP_OPENAI_API_KEY=your_openai_api_key_here
-
 # Supabase Configuration
-REACT_APP_SUPABASE_URL=your_supabase_project_url
-REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
 
 # Feature Flags
-REACT_APP_ENABLE_STREAMING=true
-REACT_APP_ENABLE_VOICE_INPUT=false
-REACT_APP_ENABLE_IMAGE_GENERATION=false
-REACT_APP_ENABLE_VOICE_OUTPUT=false
-REACT_APP_ENABLE_EMOTION_DETECTION=true
-REACT_APP_ENABLE_CONVERSATION_SUMMARY=true
-REACT_APP_ENABLE_CHARACTER_MEMORY=true
+VITE_ENABLE_STREAMING=true
+VITE_ENABLE_VOICE_INPUT=false
+VITE_ENABLE_IMAGE_GENERATION=false
+VITE_ENABLE_VOICE_OUTPUT=false
+VITE_ENABLE_EMOTION_DETECTION=true
+VITE_ENABLE_CONVERSATION_SUMMARY=true
+VITE_ENABLE_CHARACTER_MEMORY=true
 ```
 
 > **Security Note:** Always add your `.env` file to `.gitignore` to prevent accidentally committing secrets to version control.
-> **Note:** Avatar URLs are stored as public URLs in the database. If you need signed URLs or RLS, update the schema and storage logic accordingly.
-> **Note:** Voice input is currently disabled. To enable, implement a voice SDK (e.g., Web Speech API or Whisper) and set `REACT_APP_ENABLE_VOICE_INPUT=true` in your .env.
+> **Note:** Voice input is currently disabled. To enable, implement a voice SDK (e.g., Web Speech API or Whisper) and set `VITE_ENABLE_VOICE_INPUT=true` in your .env.
 
 4. Set up Supabase:
    - Create a new Supabase project
