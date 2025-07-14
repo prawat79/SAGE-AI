@@ -5,12 +5,7 @@ import PromptCard from "@/components/PromptCard";
 import Toast from "@/components/ui/toast";
 import { useState } from "react";
 import { Share2 } from "lucide-react";
-import type { User, Character } from "@shared/types";
-
-interface Collection {
-  name: string;
-  items: string[];
-}
+import type { User, Character, Collection } from "@shared/types";
 
 export default function ProfilePage() {
   // Replace any with real user type

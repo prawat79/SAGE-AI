@@ -13,3 +13,8 @@ export interface User {
   bio?: string;
   // ...other fields as needed
 }
+
+export interface Collection {
+  name: string;
+  items: string[];
+}
