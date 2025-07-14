@@ -193,9 +193,8 @@ export default function ExplorePage() {
     { value: 'Original', label: 'Original' }
   ];
 
-  // Assume characters and trendingCharacters are arrays fetched from API
+  // Placeholder for trending characters
   const trendingCharacters = [];
-  const characters = [];
 
   return (
     <MainLayout>
