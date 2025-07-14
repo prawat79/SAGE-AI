@@ -22,3 +22,12 @@ jobs:
       - name: Build
         run: npm run build || true
         working-directory: ${{ matrix.dir }}
+      - name: TypeScript type-check
+        run: npm run type-check
+
+      - name: Ensure no JS drift
+        run: |
+          ! find . -type f \( -name "*.js" -o -name "*.jsx" \) \
+            ! -path "*/node_modules/*" \
+            ! -path "*/dist/*" \
+            | grep .
