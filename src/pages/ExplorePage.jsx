@@ -4,6 +4,9 @@ import { Search, Filter, Grid, List, Star, MessageCircle, Calendar, User, Trendi
 import { useAuth } from '../contexts/AuthContext';
 import { CharacterService } from '../services/characterService';
 import ConversationService from '../services/conversationService';
+import MainLayout from "@/layout/MainLayout";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const CharacterCard = ({ character, onStartChat }) => {
   const navigate = useNavigate();
@@ -121,7 +124,7 @@ const CharacterCard = ({ character, onStartChat }) => {
   );
 };
 
-const ExplorePage = () => {
+export default function ExplorePage() {
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -191,180 +194,22 @@ const ExplorePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 pt-20">
-      {/* Header */}
-      <div className="relative py-16 overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
-        </div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center space-x-2 glass rounded-full px-4 py-2 mb-6">
-            <Sparkles className="h-4 w-4 text-purple-400" />
-            <span className="text-sm text-gray-300">Discover AI Characters</span>
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            Explore
-            <span className="gradient-text"> AI Characters</span>
-          </h1>
-          
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Discover thousands of unique AI characters with distinct personalities, 
-            backgrounds, and conversation styles. Find your perfect chat companion.
-          </p>
+    <MainLayout>
+      <div className="max-w-6xl mx-auto py-8">
+        <h1 className="text-3xl font-bold mb-8">Explore AI Characters</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {characters.map((character) => (
+            <Card key={character.id} className="flex flex-col items-center p-6">
+              <img src={character.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${character.name}`} alt={character.name} className="w-16 h-16 rounded-full mb-4" />
+              <h2 className="text-xl font-semibold mb-2">{character.name}</h2>
+              <p className="text-zinc-500 dark:text-zinc-400 mb-4 line-clamp-3">{character.description}</p>
+              <Button asChild>
+                <a href={`/characters/${character.id}`}>View Details</a>
+              </Button>
+            </Card>
+          ))}
         </div>
       </div>
-
-      {/* Search and Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-        <div className="glass rounded-2xl p-6">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="text"
-                  placeholder="Search characters by name, description, or tags..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="w-full input-glass rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-400 focus-ring"
-                />
-              </div>
-            </div>
-            
-            {/* Filters */}
-            <div className="flex flex-wrap gap-4">
-              <select
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="input-glass rounded-xl px-4 py-4 text-white focus-ring"
-              >
-                {categories.map((category) => (
-                  <option key={category.value} value={category.value} className="bg-gray-800">
-                    {category.label}
-                  </option>
-                ))}
-              </select>
-              
-              <div className="flex border border-white/10 rounded-xl overflow-hidden">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-4 transition-colors ${
-                    viewMode === 'grid' 
-                      ? 'bg-purple-500 text-white' 
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Grid className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-4 transition-colors ${
-                    viewMode === 'list' 
-                      ? 'bg-purple-500 text-white' 
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <List className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Results Count */}
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/10">
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-400">
-                {characters.length} characters found
-              </span>
-              {filters.search && (
-                <span className="text-sm text-purple-400">
-                  for "{filters.search}"
-                </span>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-400">Trending</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Characters Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        {loading ? (
-          <div className={`grid gap-6 ${
-            viewMode === 'grid'
-              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-              : 'grid-cols-1'
-          }`}>
-            {[...Array(12)].map((_, index) => (
-              <div key={index} className="card p-6 animate-pulse">
-                <div className="flex items-start space-x-4 mb-4">
-                  <div className="w-16 h-16 bg-gray-700 rounded-full"></div>
-                  <div className="flex-1">
-                    <div className="h-5 bg-gray-700 rounded mb-2"></div>
-                    <div className="h-4 bg-gray-700 rounded w-20"></div>
-                  </div>
-                </div>
-                <div className="h-4 bg-gray-700 rounded mb-2"></div>
-                <div className="h-4 bg-gray-700 rounded mb-4 w-3/4"></div>
-                <div className="h-10 bg-gray-700 rounded"></div>
-              </div>
-            ))}
-          </div>
-        ) : error ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="h-8 w-8 text-red-400" />
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">Something went wrong</h3>
-            <p className="text-gray-400 mb-6">{error}</p>
-            <button
-              onClick={fetchCharacters}
-              className="btn-primary px-6 py-3 rounded-xl font-semibold"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : characters.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="h-8 w-8 text-gray-400" />
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">No characters found</h3>
-            <p className="text-gray-400 mb-6">Try adjusting your search or filters.</p>
-            <button
-              onClick={() => setFilters({ search: '', category: '', sortBy: 'created_at', sortOrder: 'desc' })}
-              className="btn-secondary px-6 py-3 rounded-xl font-semibold"
-            >
-              Clear Filters
-            </button>
-          </div>
-        ) : (
-          <div className={`grid gap-6 ${
-            viewMode === 'grid'
-              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-              : 'grid-cols-1 max-w-4xl mx-auto'
-          }`}>
-            {characters.map((character, index) => (
-              <CharacterCard
-                key={character.id}
-                character={character}
-                onStartChat={handleStartChat}
-                style={{ animationDelay: `${index * 0.05}s` }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    </MainLayout>
   );
-};
-
-export default ExplorePage;
+}
