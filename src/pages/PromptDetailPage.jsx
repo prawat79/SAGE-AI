@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import Comments from "@/components/Comments";
 
 const PromptDetailPage = () => {
   const { promptId } = useParams();
   const [prompt, setPrompt] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [comments, setComments] = useState([]);
+  const handleAddComment = (text) => {
+    setComments((prev) => [...prev, { user: "Anonymous", text }]);
+  };
 
   useEffect(() => {
     const fetchPrompt = async () => {
@@ -72,6 +77,7 @@ const PromptDetailPage = () => {
             Use This Prompt
           </button>
         </div>
+        <Comments comments={comments} onAdd={handleAddComment} />
       </div>
     </div>
   );
