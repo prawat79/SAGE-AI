@@ -2,7 +2,9 @@ import MainLayout from "@/layout/MainLayout";
 import { Card } from "@/components/ui/card";
 import Collections from "@/components/Collections";
 import PromptCard from "@/components/PromptCard";
+import Toast from "@/components/ui/toast";
 import { useState } from "react";
+import { Share2 } from "lucide-react";
 
 export default function ProfilePage() {
   // Assume user and userCharacters are fetched from context or API
@@ -29,6 +31,7 @@ export default function ProfilePage() {
       )
     );
   };
+  const [showToast, setShowToast] = useState(false);
   return (
     <MainLayout>
       <div className="max-w-4xl mx-auto py-8">
@@ -54,7 +57,19 @@ export default function ProfilePage() {
         {selectedCollection && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-white dark:bg-zinc-900 p-6 rounded shadow-lg w-full max-w-lg">
-              <h3 className="font-semibold mb-4">{selectedCollection.name} ({selectedCollection.items.length} items)</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">{selectedCollection.name} ({selectedCollection.items.length} items)</h3>
+                <button
+                  className="p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.origin + `/collections/${encodeURIComponent(selectedCollection.name)}`);
+                    setShowToast(true);
+                  }}
+                  title="Share collection"
+                >
+                  <Share2 className="w-5 h-5" />
+                </button>
+              </div>
               <div className="grid grid-cols-1 gap-4 mb-4">
                 {selectedCollection.items.length === 0 ? (
                   <div className="text-zinc-500">No items in this collection.</div>
@@ -70,6 +85,7 @@ export default function ProfilePage() {
               <div className="flex justify-end">
                 <button className="px-4 py-2 rounded bg-zinc-200 dark:bg-zinc-700" onClick={() => setSelectedCollection(null)}>Close</button>
               </div>
+              <Toast message="Collection link copied!" show={showToast} onClose={() => setShowToast(false)} />
             </div>
           </div>
         )}
