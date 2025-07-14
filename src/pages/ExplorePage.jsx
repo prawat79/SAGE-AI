@@ -193,10 +193,27 @@ export default function ExplorePage() {
     { value: 'Original', label: 'Original' }
   ];
 
+  // Assume characters and trendingCharacters are arrays fetched from API
+  const trendingCharacters = [];
+  const characters = [];
+
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto py-8">
         <h1 className="text-3xl font-bold mb-8">Explore AI Characters</h1>
+        <h2 className="text-xl font-semibold mb-4">Trending</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-10">
+          {trendingCharacters.map((character) => (
+            <Card key={character.id} className="flex flex-col items-center p-6 border-2 border-yellow-400">
+              <img src={character.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${character.name}`} alt={character.name} className="w-16 h-16 rounded-full mb-4" />
+              <h2 className="text-xl font-semibold mb-2">{character.name}</h2>
+              <p className="text-zinc-500 dark:text-zinc-400 mb-4 line-clamp-3">{character.description}</p>
+              <Button asChild>
+                <a href={`/characters/${character.id}`}>View Details</a>
+              </Button>
+            </Card>
+          ))}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {characters.map((character) => (
             <Card key={character.id} className="flex flex-col items-center p-6">
