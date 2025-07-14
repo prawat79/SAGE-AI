@@ -7,6 +7,19 @@
 
 A cutting-edge web application for creating and chatting with AI characters, featuring multiple AI models and advanced conversation capabilities.
 
+<p align="center">
+  <a href="https://sage-ai-demo.vercel.app">
+    <img src="https://img.shields.io/badge/🚀-Live_Demo-blue?style=for-the-badge" alt="Live Demo">
+  </a>
+  <a href="#">
+    <img src="https://img.shields.io/discord/1234567890?color=7289da&label=Discord&logo=discord&logoColor=white&style=for-the-badge" alt="Discord">
+  </a>
+</p>
+
+![CI](https://github.com/prawat79/SAGE-AI/workflows/CI/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Stars](https://img.shields.io/github/stars/prawat79/SAGE-AI?style=social)
+
 ## ✨ Features
 
 ![Chat UI Demo](docs/chat-ui-demo.gif)
