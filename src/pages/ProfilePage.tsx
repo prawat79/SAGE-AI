@@ -7,24 +7,26 @@ import { useState } from "react";
 import { Share2 } from "lucide-react";
 
 export default function ProfilePage() {
-  // Assume user and userCharacters are fetched from context or API
-  const user = {};
-  const userCharacters = [];
+  // TODO: Replace any with real user type
+  const user: any = {};
+  // TODO: Replace any[] with real character type
+  const userCharacters: any[] = [];
   // ...fetch logic here...
-  const [collections, setCollections] = useState([
+  // TODO: Replace any with real collection type
+  const [collections, setCollections] = useState<any[]>([
     { name: "Favorites", items: [] },
     { name: "Funny Bots", items: [] },
   ]);
-  const [selectedCollection, setSelectedCollection] = useState(null);
-  const handleCreateCollection = (name) => {
-    setCollections((prev) => [...prev, { name, items: [] }]);
+  const [selectedCollection, setSelectedCollection] = useState<any>(null);
+  const handleCreateCollection = (name: any) => {
+    setCollections((prev: any[]) => [...prev, { name, items: [] }]);
   };
-  const handleSelectCollection = (col) => {
+  const handleSelectCollection = (col: any) => {
     setSelectedCollection(col);
   };
-  const handleAddToCollection = (collectionName, promptId) => {
-    setCollections((prev) =>
-      prev.map((col) =>
+  const handleAddToCollection = (collectionName: any, promptId: any) => {
+    setCollections((prev: any[]) =>
+      prev.map((col: any) =>
         col.name === collectionName && !col.items.includes(promptId)
           ? { ...col, items: [...col.items, promptId] }
           : col
@@ -44,7 +46,7 @@ export default function ProfilePage() {
         </div>
         <h2 className="text-xl font-semibold mb-4">My Characters</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {userCharacters.map((character) => (
+          {userCharacters.map((character: any) => (
             <PromptCard
               key={character.id}
               prompt={character}
@@ -74,8 +76,8 @@ export default function ProfilePage() {
                 {selectedCollection.items.length === 0 ? (
                   <div className="text-zinc-500">No items in this collection.</div>
                 ) : (
-                  selectedCollection.items.map((id) => {
-                    const item = userCharacters.find((c) => c.id === id);
+                  selectedCollection.items.map((id: any) => {
+                    const item = userCharacters.find((c: any) => c.id === id);
                     return item ? (
                       <PromptCard key={id} prompt={item} collections={collections} onAddToCollection={handleAddToCollection} />
                     ) : null;
