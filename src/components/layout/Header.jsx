@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Search, User, Menu, X, Plus, MessageCircle, ChevronDown } from 'lucide-react';
+import DarkModeToggle from "@/components/DarkModeToggle";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -87,6 +88,7 @@ const Header = () => {
           <Link to="/register" className="bg-accent-500 hover:bg-accent-600 text-dark-500 font-medium px-4 py-2 rounded-md transition-colors">
             Sign Up
           </Link>
+          <DarkModeToggle />
         </div>
 
         {/* Mobile Menu and Search Buttons */}
