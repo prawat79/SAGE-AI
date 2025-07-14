@@ -1,6 +1,7 @@
 import MainLayout from "@/layout/MainLayout";
 import { Card } from "@/components/ui/card";
 import Collections from "@/components/Collections";
+import PromptCard from "@/components/PromptCard";
 import { useState } from "react";
 
 export default function ProfilePage() {
@@ -19,6 +20,15 @@ export default function ProfilePage() {
     // Optionally show collection details or items
     alert(`Selected collection: ${col.name}`);
   };
+  const handleAddToCollection = (collectionName, promptId) => {
+    setCollections((prev) =>
+      prev.map((col) =>
+        col.name === collectionName && !col.items.includes(promptId)
+          ? { ...col, items: [...col.items, promptId] }
+          : col
+      )
+    );
+  };
   return (
     <MainLayout>
       <div className="max-w-4xl mx-auto py-8">
@@ -32,11 +42,12 @@ export default function ProfilePage() {
         <h2 className="text-xl font-semibold mb-4">My Characters</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {userCharacters.map((character) => (
-            <Card key={character.id} className="flex flex-col items-center p-6">
-              <img src={character.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${character.name}`} alt={character.name} className="w-16 h-16 rounded-full mb-4" />
-              <h3 className="text-lg font-semibold mb-2">{character.name}</h3>
-              <p className="text-zinc-500 dark:text-zinc-400 mb-2 line-clamp-2">{character.description}</p>
-            </Card>
+            <PromptCard
+              key={character.id}
+              prompt={character}
+              collections={collections}
+              onAddToCollection={handleAddToCollection}
+            />
           ))}
         </div>
         <Collections collections={collections} onCreate={handleCreateCollection} onSelect={handleSelectCollection} />
