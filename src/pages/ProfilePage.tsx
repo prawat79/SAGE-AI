@@ -5,28 +5,33 @@ import PromptCard from "@/components/PromptCard";
 import Toast from "@/components/ui/toast";
 import { useState } from "react";
 import { Share2 } from "lucide-react";
+import type { User, Character } from "@shared/types";
+
+interface Collection {
+  name: string;
+  items: string[];
+}
 
 export default function ProfilePage() {
-  // TODO: Replace any with real user type
-  const user: any = {};
-  // TODO: Replace any[] with real character type
-  const userCharacters: any[] = [];
+  // Replace any with real user type
+  const user: User = { id: '', name: '' };
+  // Replace any[] with real character type
+  const userCharacters: Character[] = [];
   // ...fetch logic here...
-  // TODO: Replace any with real collection type
-  const [collections, setCollections] = useState<any[]>([
+  const [collections, setCollections] = useState<Collection[]>([
     { name: "Favorites", items: [] },
     { name: "Funny Bots", items: [] },
   ]);
-  const [selectedCollection, setSelectedCollection] = useState<any>(null);
-  const handleCreateCollection = (name: any) => {
-    setCollections((prev: any[]) => [...prev, { name, items: [] }]);
+  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
+  const handleCreateCollection = (name: string) => {
+    setCollections((prev) => [...prev, { name, items: [] }]);
   };
-  const handleSelectCollection = (col: any) => {
+  const handleSelectCollection = (col: Collection) => {
     setSelectedCollection(col);
   };
-  const handleAddToCollection = (collectionName: any, promptId: any) => {
-    setCollections((prev: any[]) =>
-      prev.map((col: any) =>
+  const handleAddToCollection = (collectionName: string, promptId: string) => {
+    setCollections((prev) =>
+      prev.map((col) =>
         col.name === collectionName && !col.items.includes(promptId)
           ? { ...col, items: [...col.items, promptId] }
           : col
@@ -46,7 +51,7 @@ export default function ProfilePage() {
         </div>
         <h2 className="text-xl font-semibold mb-4">My Characters</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {userCharacters.map((character: any) => (
+          {userCharacters.map((character) => (
             <PromptCard
               key={character.id}
               prompt={character}
@@ -76,8 +81,8 @@ export default function ProfilePage() {
                 {selectedCollection.items.length === 0 ? (
                   <div className="text-zinc-500">No items in this collection.</div>
                 ) : (
-                  selectedCollection.items.map((id: any) => {
-                    const item = userCharacters.find((c: any) => c.id === id);
+                  selectedCollection.items.map((id) => {
+                    const item = userCharacters.find((c) => c.id === id);
                     return item ? (
                       <PromptCard key={id} prompt={item} collections={collections} onAddToCollection={handleAddToCollection} />
                     ) : null;
