@@ -1,11 +1,24 @@
 import MainLayout from "@/layout/MainLayout";
 import { Card } from "@/components/ui/card";
+import Collections from "@/components/Collections";
+import { useState } from "react";
 
 export default function ProfilePage() {
   // Assume user and userCharacters are fetched from context or API
   const user = {};
   const userCharacters = [];
   // ...fetch logic here...
+  const [collections, setCollections] = useState([
+    { name: "Favorites", items: [] },
+    { name: "Funny Bots", items: [] },
+  ]);
+  const handleCreateCollection = (name) => {
+    setCollections((prev) => [...prev, { name, items: [] }]);
+  };
+  const handleSelectCollection = (col) => {
+    // Optionally show collection details or items
+    alert(`Selected collection: ${col.name}`);
+  };
   return (
     <MainLayout>
       <div className="max-w-4xl mx-auto py-8">
@@ -26,6 +39,7 @@ export default function ProfilePage() {
             </Card>
           ))}
         </div>
+        <Collections collections={collections} onCreate={handleCreateCollection} onSelect={handleSelectCollection} />
       </div>
     </MainLayout>
   );
