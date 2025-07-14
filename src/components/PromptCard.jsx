@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Star, User, Calendar, Bookmark, Share2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import Toast from "@/components/ui/toast";
+import { useState } from "react";
 
 const CharacterCard = ({ character, onStartChat }) => {
   const {
@@ -23,6 +25,8 @@ const CharacterCard = ({ character, onStartChat }) => {
       onStartChat(character);
     }
   };
+
+  const [showToast, setShowToast] = useState(false);
 
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group">
@@ -120,10 +124,12 @@ const CharacterCard = ({ character, onStartChat }) => {
         </Button>
         <Button size="icon" variant="ghost" className="hover:text-blue-500 transition-colors" onClick={() => {
           navigator.clipboard.writeText(window.location.origin + `/characters/${id}`);
+          setShowToast(true);
         }}>
           <Share2 className="w-5 h-5" />
         </Button>
       </div>
+      <Toast message="Link copied!" show={showToast} onClose={() => setShowToast(false)} />
     </div>
   );
 };
