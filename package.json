@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "backend:dev": "nodemon backend/src/server.ts",
-    "backend:build": "tsc -p backend/tsconfig.json && node backend/dist/server.js"
+    "backend:build": "tsc -p backend/tsconfig.json && node backend/dist/server.js",
+    "type-check": "tsc --noEmit && cd backend && tsc --noEmit"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.18",

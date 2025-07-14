@@ -3,7 +3,10 @@
   "compilerOptions": {
     "outDir": "dist",
     "module": "CommonJS",
-    "noEmit": false
+    "noEmit": false,
+    "paths": {
+      "@shared/*": ["../shared/*"]
+    }
   },
   "include": ["src"]
 }
