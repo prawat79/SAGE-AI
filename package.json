@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "tsc && vite build",
+    "backend:dev": "nodemon backend/src/server.ts",
+    "backend:build": "tsc -p backend/tsconfig.json && node backend/dist/server.js"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.18",
@@ -22,12 +23,18 @@
     "react-router-dom": "^6.22.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.55",
-    "@types/react-dom": "^18.2.19",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.13",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.4.17",
+    "nodemon": "^3.1.10",
     "postcss": "^8.4.35",
     "tailwindcss": "^4.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
     "vite": "^5.1.0"
   }
 }
