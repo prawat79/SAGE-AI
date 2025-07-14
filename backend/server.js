@@ -22,6 +22,11 @@ if (!isAIConfigValid) {
   console.warn('Warning: AI services are not fully configured. Some features may not work.');
 }
 
+// Add validation for characters.rating
+function validateRating(rating) {
+  return typeof rating === 'number' && rating >= 0 && rating <= 5;
+}
+
 // Security middleware
 app.use(helmet());
 app.use(compression());

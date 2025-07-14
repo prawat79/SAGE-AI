@@ -1,3 +1,7 @@
+[![Last Commit](https://img.shields.io/github/last-commit/yourusername/SAGE-AI)](https://github.com/yourusername/SAGE-AI)
+[![License](https://img.shields.io/github/license/yourusername/SAGE-AI)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/yourusername/SAGE-AI?style=social)](https://github.com/yourusername/SAGE-AI/stargazers)
+
 # Sage AI - Advanced AI Character Chat Platform
 
 A cutting-edge web application for creating and chatting with AI characters, featuring multiple AI models and advanced conversation capabilities.
@@ -67,6 +71,10 @@ REACT_APP_ENABLE_EMOTION_DETECTION=true
 REACT_APP_ENABLE_CONVERSATION_SUMMARY=true
 REACT_APP_ENABLE_CHARACTER_MEMORY=true
 ```
+
+> **Security Note:** Always add your `.env` file to `.gitignore` to prevent accidentally committing secrets to version control.
+> **Note:** Avatar URLs are stored as public URLs in the database. If you need signed URLs or RLS, update the schema and storage logic accordingly.
+> **Note:** Voice input is currently disabled. To enable, implement a voice SDK (e.g., Web Speech API or Whisper) and set `REACT_APP_ENABLE_VOICE_INPUT=true` in your .env.
 
 4. Set up Supabase:
    - Create a new Supabase project
