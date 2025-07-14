@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { CharacterService } from '../services/characterService';
 import ConversationService from '../services/conversationService';
 import { MessageCircle, Heart, Share2, Star, Users, Calendar, Tag } from 'lucide-react';
+import Comments from "@/components/Comments";
 
 const CharacterDetailPage = () => {
   const { id } = useParams();
@@ -14,6 +15,7 @@ const CharacterDetailPage = () => {
   const [error, setError] = useState(null);
   const [isStartingChat, setIsStartingChat] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [comments, setComments] = useState([]);
 
   useEffect(() => {
     const fetchCharacter = async () => {
@@ -85,6 +87,10 @@ const CharacterDetailPage = () => {
       // Fallback to clipboard
       navigator.clipboard.writeText(window.location.href);
     }
+  };
+
+  const handleAddComment = (text) => {
+    setComments((prev) => [...prev, { user: "Anonymous", text }]);
   };
 
   if (loading) {
@@ -280,6 +286,7 @@ const CharacterDetailPage = () => {
           </div>
         </div>
       </div>
+      <Comments comments={comments} onAdd={handleAddComment} />
     </div>
   );
 };

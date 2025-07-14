@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Star, User, Calendar, Bookmark } from 'lucide-react';
+import { Heart, MessageCircle, Star, User, Calendar, Bookmark, Share2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const CharacterCard = ({ character, onStartChat }) => {
@@ -117,6 +117,11 @@ const CharacterCard = ({ character, onStartChat }) => {
         </Button>
         <Button size="icon" variant="ghost" className="hover:text-yellow-500 transition-colors">
           <Bookmark className="w-5 h-5" />
+        </Button>
+        <Button size="icon" variant="ghost" className="hover:text-blue-500 transition-colors" onClick={() => {
+          navigator.clipboard.writeText(window.location.origin + `/characters/${id}`);
+        }}>
+          <Share2 className="w-5 h-5" />
         </Button>
       </div>
     </div>
