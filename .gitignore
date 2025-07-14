@@ -14,4 +14,6 @@ dist/
 # OS generated files
 .DS_Store
 Thumbs.db
+# Ignore environment variable files
 .env
+backend/.env

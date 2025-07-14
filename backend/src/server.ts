@@ -22,6 +22,11 @@ if (!isAIConfigValid) {
   console.warn('Warning: AI services are not fully configured. Some features may not work.');
 }
 
+// Add validation for characters.rating
+function validateRating(rating: any) {
+  return typeof rating === 'number' && rating >= 0 && rating <= 5;
+}
+
 // Security middleware
 app.use(helmet());
 app.use(compression());
@@ -66,7 +71,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (req: any, res: any) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -83,7 +88,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/users', userRoutes);
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use('*', (req: any, res: any) => {
   res.status(404).json({
     error: 'Route not found',
     message: `Cannot ${req.method} ${req.originalUrl}`
@@ -91,7 +96,7 @@ app.use('*', (req, res) => {
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
+app.use((err: any, req: any, res: any, next: any) => {
   console.error('Error:', err);
   
   // Don't leak error details in production

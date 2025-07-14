@@ -1,6 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Star, User, Calendar } from 'lucide-react';
+import { Heart, MessageCircle, Star, User, Calendar, Bookmark, Share2, Plus } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import Toast from "@/components/ui/toast";
+import { useState } from "react";
 
 const CharacterCard = ({ character, onStartChat }) => {
   const {
@@ -22,6 +25,10 @@ const CharacterCard = ({ character, onStartChat }) => {
       onStartChat(character);
     }
   };
+
+  const [showToast, setShowToast] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedCollection, setSelectedCollection] = useState("");
 
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group">
@@ -110,6 +117,55 @@ const CharacterCard = ({ character, onStartChat }) => {
           </div>
         </div>
       </div>
+      <div className="flex gap-2 absolute top-4 right-4">
+        <Button size="icon" variant="ghost" className="hover:text-red-500 transition-colors">
+          <Heart className="w-5 h-5" />
+        </Button>
+        <Button size="icon" variant="ghost" className="hover:text-yellow-500 transition-colors">
+          <Bookmark className="w-5 h-5" />
+        </Button>
+        <Button size="icon" variant="ghost" className="hover:text-blue-500 transition-colors" onClick={() => {
+          navigator.clipboard.writeText(window.location.origin + `/characters/${id}`);
+          setShowToast(true);
+        }}>
+          <Share2 className="w-5 h-5" />
+        </Button>
+        <Button size="icon" variant="ghost" className="hover:text-green-500 transition-colors" onClick={() => setShowModal(true)}>
+          <Plus className="w-5 h-5" />
+        </Button>
+      </div>
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded shadow-lg w-80">
+            <h3 className="font-semibold mb-4">Add to Collection</h3>
+            <select
+              className="w-full mb-4 p-2 rounded border"
+              value={selectedCollection}
+              onChange={e => setSelectedCollection(e.target.value)}
+            >
+              <option value="">Select a collection</option>
+              {/* collections.map((col, i) => (
+                <option key={i} value={col.name}>{col.name}</option>
+              ))} */}
+            </select>
+            <div className="flex gap-2 justify-end">
+              <Button variant="ghost" onClick={() => setShowModal(false)}>Cancel</Button>
+              <Button
+                onClick={() => {
+                  if (selectedCollection) {
+                    // onAddToCollection(selectedCollection, prompt.id);
+                    setShowModal(false);
+                  }
+                }}
+                disabled={!selectedCollection}
+              >
+                Add
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      <Toast message="Link copied!" show={showToast} onClose={() => setShowToast(false)} />
     </div>
   );
 };
