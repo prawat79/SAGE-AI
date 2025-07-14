@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { CharacterService } from '../services/characterService';
 import ConversationService from '../services/conversationService';
 import AIService from '../services/aiService';
+import MainLayout from "@/layout/MainLayout";
+import ChatBubble from "@/components/ChatBubble";
 
 const Message = ({ message, character, onRegenerate, onCopy }) => {
   const isUser = message.sender_type === 'user';
@@ -79,7 +81,7 @@ const Message = ({ message, character, onRegenerate, onCopy }) => {
   );
 };
 
-const ChatPage = () => {
+export default function ChatPage() {
   const { conversationId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -300,7 +302,7 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex flex-col">
+    <MainLayout>
       {/* API Key Modal */}
       {showApiKeyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -452,12 +454,8 @@ const ChatPage = () => {
               </div>
             </div>
           ) : (
-            messages.map((message) => (
-              <Message
-                key={message.id}
-                message={message}
-                character={character}
-              />
+            messages.map((msg, idx) => (
+              <ChatBubble key={idx} message={msg} isUser={msg.sender_type === 'user'} />
             ))
           )}
           <div ref={messagesEndRef} />
@@ -507,8 +505,6 @@ const ChatPage = () => {
           )}
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
-};
-
-export default ChatPage;
+}
