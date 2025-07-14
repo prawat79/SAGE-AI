@@ -1,3 +1,4 @@
+[![Vercel](https://vercelbadge.vercel.app/api/prawat79/sage-ai)](https://vercel.com/prawat79/sage-ai)
 [![Last Commit](https://img.shields.io/github/last-commit/yourusername/SAGE-AI)](https://github.com/yourusername/SAGE-AI)
 [![License](https://img.shields.io/github/license/yourusername/SAGE-AI)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/yourusername/SAGE-AI?style=social)](https://github.com/yourusername/SAGE-AI/stargazers)
@@ -6,7 +7,9 @@
 
 A cutting-edge web application for creating and chatting with AI characters, featuring multiple AI models and advanced conversation capabilities.
 
-## Features
+## ✨ Features
+
+![Chat UI Demo](docs/chat-ui-demo.gif)
 
 - 🤖 AI-powered character conversations
 - 🎭 Create and customize AI characters
@@ -38,7 +41,7 @@ A cutting-edge web application for creating and chatting with AI characters, fea
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/ai-character-chat.git
+git clone https://github.com/prawat79/SAGE-AI.git
 cd ai-character-chat
 ```
 
